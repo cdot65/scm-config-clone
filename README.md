@@ -1,6 +1,6 @@
 # SCM Config Clone
 
-![Banner Image](https://raw.githubusercontent.com/cdot65/scm-config-clone/main/assets/logo.svg)
+![Banner Image](https://raw.githubusercontent.com/cdot65/scm-config-clone/refs/heads/main/docs/images/logo.svg)
 
 [![Build Status](https://github.com/cdot65/scm-config-clone/actions/workflows/ci.yml/badge.svg)](https://github.com/cdot65/scm-config-clone/actions/workflows/ci.yml)
 [![PyPI version](https://badge.fury.io/py/scm-config-clone.svg)](https://badge.fury.io/py/scm-config-clone)
