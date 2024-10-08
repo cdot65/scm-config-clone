@@ -1,14 +1,14 @@
-# src/scm_config_clone/main.py
+# scm_config_clone/main.py
 
 """
 SCM Config Clone CLI Application
 
-This application provides commands to clone configuration objects from a source Strata Cloud Manager tenant to a destination tenant.
+Provides commands to clone configuration objects between SCM tenants.
 
 Commands:
-- `address-objects`: Clone address objects.
-- `address-groups`: Clone address groups.
-- `auth`: Create authentication file.
+- `clone-address-objects`: Clone address objects.
+- `clone-address-groups`: Clone address groups.
+- `create-secrets-file`: Create authentication file.
 
 Usage:
     scm-clone <command> [OPTIONS]
@@ -19,7 +19,7 @@ import logging
 
 from scm_config_clone.commands import (
     clone_address_objects,
-    address_groups_cmd,
+    clone_address_groups,
     create_secrets_file,
 )
 
@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 # Register commands
 app.command()(clone_address_objects)
-app.command()(address_groups_cmd)
+app.command()(clone_address_groups)
 app.command()(create_secrets_file)
 
 if __name__ == "__main__":

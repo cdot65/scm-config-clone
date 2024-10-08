@@ -1,7 +1,6 @@
-# src/scm_config_clone/commands/address_groups.py
+# scm_config_clone/commands/clone_address_groups.py
 
 import logging
-
 import typer
 from panapi.config.objects import AddressGroup
 
@@ -13,8 +12,7 @@ from scm_config_clone.utilities.helpers import (
 
 logger = logging.getLogger(__name__)
 
-
-def address_groups_cmd(
+def clone_address_groups(
     settings_file: str = typer.Option(
         ".secrets.yaml",
         "--settings-file",
@@ -23,7 +21,19 @@ def address_groups_cmd(
     ),
 ):
     """
-    Clone address groups from source to destination Strata Cloud Manager tenant.
+    Clone address groups from the source to the destination SCM tenant.
+
+    Authenticates with both source and destination tenants, retrieves address groups from the source,
+    and creates them in the destination tenant.
+
+    Args:
+        settings_file (str): Path to the YAML settings file.
+
+    Error:
+        typer.Exit: Exits the application if an error occurs during the process.
+
+    Return:
+        None
     """
     typer.echo("Starting address groups migration...")
 

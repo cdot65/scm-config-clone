@@ -1,7 +1,7 @@
-# src/scm_config_clone/utilities/helpers.py
+# scm_config_clone/utilities/helpers.py
 
 import logging
-from typing import Dict, List, Tuple, Any
+from typing import Dict, List
 
 from panapi import PanApiSession
 from panapi.config.objects import Address, AddressGroup
@@ -10,6 +10,18 @@ logger = logging.getLogger(__name__)
 
 
 def authenticate_scm(scm_info: Dict[str, str]) -> PanApiSession:
+    """
+    Authenticate with a Strata Cloud Manager tenant and return an API session.
+
+    Args:
+        scm_info (Dict[str, str]): SCM authentication details.
+
+    Error:
+        Exception: Raises an exception if authentication fails.
+
+    Return:
+        PanApiSession: An authenticated API session object.
+    """
     session = PanApiSession()
     try:
         session.authenticate(
@@ -32,6 +44,22 @@ def create_scm_address_objects(
     folder: str,
     session: PanApiSession,
 ) -> List[Dict[str, str]]:
+    """
+    Create address objects in the destination SCM tenant.
+
+    Iterates over address objects and creates them in the specified folder of the destination tenant.
+
+    Args:
+        address_objects (List[Address]): List of address objects to create.
+        folder (str): Folder name in the destination tenant.
+        session (PanApiSession): Authenticated API session for the destination tenant.
+
+    Error:
+        Exception: Raises an exception if creation fails.
+
+    Return:
+        List[Dict[str, str]]: List of created address objects data.
+    """
     scm_address_objects = []
 
     for address_object in address_objects:
@@ -78,6 +106,22 @@ def create_scm_address_groups(
     folder: str,
     session: PanApiSession,
 ) -> List[Dict[str, str]]:
+    """
+    Create address groups in the destination SCM tenant.
+
+    Iterates over address groups and creates them in the specified folder of the destination tenant.
+
+    Args:
+        address_groups (List[AddressGroup]): List of address groups to create.
+        folder (str): Folder name in the destination tenant.
+        session (PanApiSession): Authenticated API session for the destination tenant.
+
+    Error:
+        Exception: Raises an exception if creation fails.
+
+    Return:
+        List[Dict[str, str]]: List of created address groups data.
+    """
     scm_address_groups = []
 
     for address_group in address_groups:

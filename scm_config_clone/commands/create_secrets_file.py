@@ -1,4 +1,4 @@
-# src/scm_config_clone/commands/auth.py
+# scm_config_clone/commands/create_secrets_file.py
 
 import typer
 import logging
@@ -16,7 +16,18 @@ def create_secrets_file(
     ),
 ):
     """
-    Create authentication file (.secrets.yaml).
+    Create an authentication file (.secrets.yaml) with SCM credentials.
+
+    Prompts the user for source and destination SCM credentials and writes them to a YAML file.
+
+    Args:
+        output_file (str): Path to the output settings YAML file.
+
+    Error:
+        typer.Exit: Exits the application if an error occurs during file writing.
+
+    Return:
+        None
     """
     typer.echo("Creating authentication file...")
 

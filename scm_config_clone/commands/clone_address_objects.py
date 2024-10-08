@@ -1,4 +1,4 @@
-# src/scm_config_clone/commands/address_objects.py
+# scm_config_clone/commands/clone_address_objects.py
 
 import typer
 import logging
@@ -23,7 +23,19 @@ def clone_address_objects(
     ),
 ):
     """
-    Clone address objects from source to destination Strata Cloud Manager tenant.
+    Clone address objects from the source to the destination SCM tenant.
+
+    Authenticates with both source and destination tenants, retrieves address objects from the source,
+    and creates them in the destination tenant.
+
+    Args:
+        settings_file (str): Path to the YAML settings file.
+
+    Error:
+        typer.Exit: Exits the application if an error occurs during the process.
+
+    Return:
+        None
     """
     typer.echo("Starting address objects migration...")
 

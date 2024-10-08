@@ -1,4 +1,4 @@
-# src/scm_config_clone/config/settings.py
+# scm_config_clone/config/settings.py
 
 from dynaconf import Dynaconf
 from typing import Dict
@@ -8,6 +8,20 @@ logger = logging.getLogger(__name__)
 
 
 def load_settings(settings_file: str) -> Dict[str, Dict[str, str]]:
+    """
+    Load settings from a YAML configuration file.
+
+    Reads the settings file and extracts source and destination SCM authentication details.
+
+    Args:
+        settings_file (str): Path to the YAML settings file.
+
+    Error:
+        Exception: Raises an exception if an error occurs during loading.
+
+    Return:
+        Dict[str, Dict[str, str]]: A dictionary containing source and destination SCM configurations.
+    """
     try:
         settings = Dynaconf(settings_files=[settings_file])
         source_scm = {
