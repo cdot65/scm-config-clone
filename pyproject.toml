@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "scm-config-clone"
 version = "0.1.0"
-description = "The purpose of this project is to take in Strata Cloud Manager configuration from one tenant and push it to another."
+description = "A command-line tool to clone configuration objects between Palo Alto Networks Strata Cloud Manager (SCM) tenants."
 authors = ["Calvin Remsburg <calvin@cdot.io>"]
 license = "Apache 2.0"
 readme = "README.md"
