@@ -20,6 +20,7 @@ import logging
 from scm_config_clone.commands import (
     clone_address_objects,
     clone_address_groups,
+    clone_security_profile_groups,
     create_secrets_file,
 )
 
@@ -36,6 +37,7 @@ logger = logging.getLogger(__name__)
 # Register commands
 app.command()(clone_address_objects)
 app.command()(clone_address_groups)
+app.command()(clone_security_profile_groups)
 app.command()(create_secrets_file)
 
 if __name__ == "__main__":

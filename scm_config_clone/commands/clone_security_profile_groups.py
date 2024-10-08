@@ -1,19 +1,19 @@
-# scm_config_clone/commands/clone_address_objects.py
+# scm_config_clone/commands/clone_security_profile_groups.py
 
 import typer
 import logging
 
 from scm_config_clone.utilities.helpers import (
     authenticate_scm,
-    create_scm_address_objects,
+    create_scm_security_profile_groups,
 )
 from scm_config_clone.config.settings import load_settings
-from panapi.config.objects import Address
+from panapi.config.security import ProfileGroup
 
 logger = logging.getLogger(__name__)
 
 
-def clone_address_objects(
+def clone_security_profile_groups(
     settings_file: str = typer.Option(
         ".secrets.yaml",
         "--settings-file",
@@ -22,9 +22,9 @@ def clone_address_objects(
     ),
 ):
     """
-    Clone address objects from the source to the destination SCM tenant.
+    Clone security profile groups from the source to the destination SCM tenant.
 
-    Authenticates with both source and destination tenants, retrieves address objects from the source,
+    Authenticates with both source and destination tenants, retrieves security profile groups from the source,
     and creates them in the destination tenant.
 
     Args:
@@ -36,7 +36,7 @@ def clone_address_objects(
     Return:
         None
     """
-    typer.echo("Starting address objects migration...")
+    typer.echo("Starting security profile groups migration...")
 
     # Load settings
     settings = load_settings(settings_file)
@@ -48,14 +48,14 @@ def clone_address_objects(
         logger.error(f"Error authenticating with source tenant: {e}")
         raise typer.Exit(code=1)
 
-    # Retrieve address objects from source
+    # Retrieve security profile groups from source
     try:
         folder = {"folder": settings["source_scm"]["folder"]}
-        source_address = Address(**folder)
-        address_objects = source_address.list(source_session)
-        logger.info(f"Retrieved {len(address_objects)} address objects from source.")
+        source_profile_group = ProfileGroup(**folder)
+        profile_groups = source_profile_group.list(source_session)
+        logger.info(f"Retrieved {len(profile_groups)} security profile groups from source.")
     except Exception as e:
-        logger.error(f"Error retrieving address objects from source: {e}")
+        logger.error(f"Error retrieving security profile groups from source: {e}")
         raise typer.Exit(code=1)
 
     # Authenticate with destination tenant
@@ -65,18 +65,18 @@ def clone_address_objects(
         logger.error(f"Error authenticating with destination tenant: {e}")
         raise typer.Exit(code=1)
 
-    # Create address objects in destination
+    # Create security profile groups in destination
     try:
-        created_objects = create_scm_address_objects(
-            address_objects=address_objects,
+        created_profile_groups = create_scm_security_profile_groups(
+            profile_groups=profile_groups,
             folder=settings["destination_scm"]["folder"],
             session=destination_session,
         )
         logger.info(
-            f"Successfully created {len(created_objects)} address objects in destination."
+            f"Successfully created {len(created_profile_groups)} security profile groups in destination."
         )
     except Exception as e:
-        logger.error(f"Error creating address objects in destination: {e}")
+        logger.error(f"Error creating security profile groups in destination: {e}")
         raise typer.Exit(code=1)
 
-    typer.echo("Address objects migration completed successfully.")
+    typer.echo("Security profile groups migration completed successfully.")
