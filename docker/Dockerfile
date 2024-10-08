@@ -11,9 +11,8 @@ RUN apk add --no-cache gcc musl-dev libffi-dev make
 # Set the working directory in the container to /app
 WORKDIR /app
 
-# Install any needed packages specified in requirements.txt
-# Note: The requirements.txt should contain pan-os-upgrade==1.3.10
-RUN pip install --no-cache-dir scm-config-clone==0.1.2
+# Install any needed packages specified
+RUN pip install --no-cache-dir scm-config-clone==0.1.0
 
 # Set the locale to avoid issues with emoji rendering
 ENV LANG=C.UTF-8
