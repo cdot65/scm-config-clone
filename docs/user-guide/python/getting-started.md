@@ -20,7 +20,11 @@ You'll be prompted to enter your source and destination SCM credentials.
 
 **Sample Interaction:**
 
-```
+<div class="termy">
+
+<!-- termynal -->
+```bash
+$ scm-clone create-secrets-file
 Creating authentication file...
 Enter source Strata Cloud Manager credentials:
 Source Client ID: <your_source_client_id>
@@ -36,6 +40,28 @@ Token URL [https://auth.apps.paloaltonetworks.com/oauth2/access_token]:
 Authentication file written to .secrets.yaml
 Authentication file created successfully.
 ```
+</div>
+
+The resulting file will look somthing like this:
+
+<div class="termy">
+
+<!-- termynal -->
+```yaml
+oauth:
+  destination:
+    client_id: "this-is-a-placeholder"
+    client_secret: "this-is-a-placeholder"
+    folder: "this-is-a-placeholder"
+    tsg: "this-is-a-placeholder"
+  source:
+    client_id: "this-is-a-placeholder"
+    client_secret: "this-is-a-placeholder"
+    folder: "this-is-a-placeholder"
+    tsg: "this-is-a-placeholder"
+  token_url: "https://auth.apps.paloaltonetworks.com/oauth2/access_token"
+```
+</div>
 
 ## Step 2: Clone Address Objects
 
