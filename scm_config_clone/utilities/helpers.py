@@ -5,6 +5,7 @@ from typing import Dict, List
 
 from panapi import PanApiSession
 from panapi.config.objects import Address, AddressGroup
+from panapi.config.security import ProfileGroup
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +68,7 @@ def create_scm_address_objects(
         scm_address_data = {
             "name": address_object.name,
             "folder": folder,
+            "limit": 5000,
         }
 
         # Optional fields
@@ -130,6 +132,7 @@ def create_scm_address_groups(
         scm_address_group_data = {
             "folder": folder,
             "name": address_group.name,
+            "limit": 5000,
         }
 
         # Optional fields
@@ -160,3 +163,56 @@ def create_scm_address_groups(
             raise
 
     return scm_address_groups
+
+
+def create_scm_security_profile_groups(
+    profile_groups: List[ProfileGroup],
+    folder: str,
+    session: PanApiSession,
+) -> List[Dict[str, str]]:
+    """
+    Create security profile groups in the destination SCM tenant.
+
+    Iterates over list of security profile groups and creates them in the specified folder of the destination tenant.
+
+    Args:
+        profile_groups (List[ProfileGroup]): List of security profile groups to create.
+        folder (str): Folder name in the destination tenant.
+        session (PanApiSession): Authenticated API session for the destination tenant.
+
+    Error:
+        Exception: Raises an exception if creation fails.
+
+    Return:
+        List[Dict[str, str]]: List of created security profile group data.
+    """
+    scm_profile_groups = []
+
+    for profile_group in profile_groups:
+        # Extract attributes
+        scm_profile_group_data = {
+            "name": profile_group.name,
+            "folder": folder,
+            "limit": 5000,
+        }
+
+        # Optional fields
+        if getattr(profile_group, "description", None):
+            scm_profile_group_data["description"] = profile_group.description
+
+
+        logger.debug(f"Processing scm_profile_group_data: {scm_profile_group_data}.")
+
+        # Create address object
+        try:
+            scm_address = Address(**scm_profile_group_data)
+            scm_address.create(session)
+            scm_profile_groups.append(scm_profile_group_data)
+            logger.info(f"Created address object {profile_group.name}")
+        except Exception as e:
+            logger.error(f"Error creating address object {profile_group.name}: {e}")
+            raise
+
+    return scm_profile_groups
+
+
