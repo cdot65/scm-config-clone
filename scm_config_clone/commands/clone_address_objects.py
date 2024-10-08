@@ -2,7 +2,6 @@
 
 import typer
 import logging
-from pathlib import Path
 
 from scm_config_clone.utilities.helpers import (
     authenticate_scm,
