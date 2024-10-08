@@ -1,0 +1,47 @@
+# mkdocs.yml
+
+site_name: SCM Config Clone Documentation
+site_description: A command-line tool to clone configuration objects between Palo Alto Networks Strata Cloud Manager (SCM) tenants.
+site_url: https://cdot65.github.io/scm-config-clone/
+repo_name: cdot65/scm-config-clone
+repo_url: https://github.com/cdot65/scm-config-clone
+theme:
+  name: material
+  language: en
+  features:
+    - navigation.tabs
+    - navigation.instant
+plugins:
+  - search
+  - termynal
+  - mkdocstrings:
+      handlers:
+        python:
+          rendering:
+            show_source: true
+nav:
+  - Home: index.md
+  - User Guide:
+      - Introduction: user-guide/introduction.md
+      - Python:
+          - Installation: user-guide/python/installation.md
+          - Getting Started: user-guide/python/getting-started.md
+          - Commands: user-guide/python/commands.md
+          - Examples: user-guide/python/examples.md
+          - Troubleshooting: user-guide/python/troubleshooting.md
+      - Docker:
+          - Installation: user-guide/docker/installation.md
+          - Getting Started: user-guide/docker/installation.md
+          - Commands: user-guide/docker/commands.md
+          - Examples: user-guide/docker/examples.md
+          - Troubleshooting: user-guide/docker/troubleshooting.md
+  - About:
+      - License: about/license.md
+      - Contributing: about/contributing.md
+      - Release Notes: about/release-notes.md
+extra_css:
+  - css/termynal.css
+  - css/custom.css
+extra_javascript:
+  - js/termynal.js
+  - js/custom.js

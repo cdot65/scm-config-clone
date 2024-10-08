@@ -1,11 +1,11 @@
 # SCM Config Clone
 
-![Banner Image](https://raw.githubusercontent.com/yourusername/scm-config-clone/main/assets/logo.svg)
+![Banner Image](https://raw.githubusercontent.com/cdot65/scm-config-clone/main/assets/logo.svg)
 
-[![Build Status](https://github.com/yourusername/scm-config-clone/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/scm-config-clone/actions/workflows/ci.yml)
+[![Build Status](https://github.com/cdot65/scm-config-clone/actions/workflows/ci.yml/badge.svg)](https://github.com/cdot65/scm-config-clone/actions/workflows/ci.yml)
 [![PyPI version](https://badge.fury.io/py/scm-config-clone.svg)](https://badge.fury.io/py/scm-config-clone)
 [![Python versions](https://img.shields.io/pypi/pyversions/scm-config-clone.svg)](https://pypi.org/project/scm-config-clone/)
-[![License](https://img.shields.io/github/license/yourusername/scm-config-clone.svg)](https://github.com/yourusername/scm-config-clone/blob/main/LICENSE)
+[![License](https://img.shields.io/github/license/cdot65/scm-config-clone.svg)](https://github.com/cdot65/scm-config-clone/blob/main/LICENSE)
 
 A command-line tool to clone configuration objects between Palo Alto Networks Strata Cloud Manager (SCM) tenants.
 
