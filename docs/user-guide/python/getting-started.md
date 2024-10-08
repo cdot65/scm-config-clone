@@ -8,9 +8,13 @@ Before cloning configurations, you need to create a `.secrets.yaml` file contain
 
 Run the following command:
 
+<div class="termy">
+
+<!-- termynal -->
 ```bash
 $ scm-clone create-secrets-file
 ```
+</div>
 
 You'll be prompted to enter your source and destination SCM credentials.
 
@@ -37,9 +41,13 @@ Authentication file created successfully.
 
 To clone address objects from the source to the destination tenant, run:
 
+<div class="termy">
+
+<!-- termynal -->
 ```bash
 $ scm-clone clone-address-objects
 ```
+</div>
 
 The tool will use the credentials from `.secrets.yaml`.
 
@@ -47,9 +55,13 @@ The tool will use the credentials from `.secrets.yaml`.
 
 To clone address groups, run:
 
+<div class="termy">
+
+<!-- termynal -->
 ```bash
 $ scm-clone clone-address-groups
 ```
+</div>
 
 ---
 

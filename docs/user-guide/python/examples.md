@@ -26,12 +26,16 @@ $ scm-clone clone-address-objects
 
 **Sample Output:**
 
-```
-Starting address objects migration...
+<div class="termy">
+
+<!-- termynal -->
+```bash
+$ scm-clone clone-address-groupsStarting address objects migration...
 Retrieved 15 address objects from source.
 Successfully created 15 address objects in destination.
 Address objects migration completed successfully.
 ```
+</div>
 
 ## Example 3: Cloning Address Groups
 
@@ -45,12 +49,17 @@ $ scm-clone clone-address-groups
 
 **Sample Output:**
 
-```
+<div class="termy">
+
+<!-- termynal -->
+```bash
+$ scm-clone clone-address-groups
 Starting address groups migration...
 Retrieved 8 address groups from source.
 Successfully created 8 address groups in destination.
 Address groups migration completed successfully.
 ```
+</div>
 
 ## Example 4: Specifying a Custom Settings File
 
@@ -67,3 +76,5 @@ $ scm-clone clone-address-objects --settings-file custom_secrets.yaml
 ---
 
 Feel free to combine options as needed to suit your workflow.
+
+If you run into any issues, consider visiting the [Troubleshooting](./troubleshooting.md) guide.
