@@ -4,6 +4,18 @@ Welcome to the release notes for the `scm-config-clone` tool. This document prov
 
 ---
 
+## Version 0.1.1
+
+**Release Date:** October 8, 2024
+
+### Introduction
+
+- **Features**:
+  - **Security Profile Groups**: Adding a new command for security profile groups.
+  - **Limit Update**: Update the limit parameter within the request to 5000.
+
+---
+
 ## Version 0.1.0
 
 **Release Date:** October 8, 2024
