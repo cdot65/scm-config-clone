@@ -29,7 +29,7 @@ def create_secrets_file(
     Return:
         None
     """
-    typer.echo("*" * 79 + "\nCreating authentication file called .secrets.yaml in the current directory\n")
+    typer.echo("*" * 79 + f"\nCreating authentication file called {output_file} in the current directory\n")
 
     # Prompt user for credentials
     typer.echo("-" * 79 + "\n\tEnter source SCM credentials (where are you cloning from?)\n" + "-" * 79)

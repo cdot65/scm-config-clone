@@ -28,14 +28,12 @@ def load_settings(settings_file: str) -> Dict[str, Dict[str, str]]:
             "client_id": settings.oauth.source.client_id,
             "client_secret": settings.oauth.source.client_secret,
             "tenant": settings.oauth.source.tsg,
-            "token_url": settings.oauth.token_url,
             "folder": settings.oauth.source.folder,
         }
         destination_scm = {
             "client_id": settings.oauth.destination.client_id,
             "client_secret": settings.oauth.destination.client_secret,
             "tenant": settings.oauth.destination.tsg,
-            "token_url": settings.oauth.token_url,
             "folder": settings.oauth.destination.folder,
         }
         return {
