@@ -46,6 +46,7 @@ def clone_address_objects(
 
     # Load settings
     settings = load_settings(settings_file)
+    logger.info(f"Loaded settings: {settings}")
 
     # --- Authenticate with source tenant ---
     try:
@@ -53,10 +54,10 @@ def clone_address_objects(
         source_client = Scm(
             client_id=source_creds["client_id"],
             client_secret=source_creds["client_secret"],
-            tsg_id=source_creds["tsg_id"],
-            log_level="INFO",
+            tsg_id=source_creds["tenant"],
+            log_level="debug",
         )
-        logger.info(f"Authenticated with source SCM tenant: {source_creds['tsg_id']}")
+        logger.info(f"Authenticated with source SCM tenant: {source_creds['tenant']}")
     except (AuthenticationError, KeyError) as e:
         logger.error(f"Error authenticating with source tenant: {e}")
         raise typer.Exit(code=1)
@@ -82,11 +83,11 @@ def clone_address_objects(
         destination_client = Scm(
             client_id=dest_creds["client_id"],
             client_secret=dest_creds["client_secret"],
-            tsg_id=dest_creds["tsg_id"],
+            tsg_id=dest_creds["tenant"],
             log_level="INFO",
         )
         logger.info(
-            f"Authenticated with destination SCM tenant: {dest_creds['tsg_id']}"
+            f"Authenticated with destination SCM tenant: {dest_creds['tenant']}"
         )
     except (AuthenticationError, KeyError) as e:
         logger.error(f"Error authenticating with destination tenant: {e}")
