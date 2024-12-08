@@ -29,30 +29,58 @@ def create_secrets_file(
     Return:
         None
     """
-    typer.echo("Creating authentication file...")
+    typer.echo("*" * 79 + "\nCreating authentication file called .secrets.yaml in the current directory\n")
 
     # Prompt user for credentials
-    typer.echo("Enter source Strata Cloud Manager credentials:")
-    source_client_id = typer.prompt("Source Client ID")
-    source_client_secret = typer.prompt("Source Client Secret", hide_input=True)
-    source_tsg = typer.prompt("Source Tenant TSG")
-    source_folder = typer.prompt("Source Folder", default="Prisma Access")
+    typer.echo("-" * 79 + "\n\tEnter source SCM credentials (where are you cloning from?)\n" + "-" * 79)
+    source_client_id = typer.prompt(
+        default="example@1234567890.iam.panserviceaccount.com",
+        text="Source SCM Client ID\n",
+        show_default=True,
+    )
+    source_client_secret = typer.prompt(
+        default="12345678-1234-1234-1234-123456789012",
+        hide_input=True,
+        show_default=True,
+        text="Source SCM Client Secret (input hidden)\n",
+    )
+    source_tsg = typer.prompt(
+        default="1234567890",
+        show_default=True,
+        text="Source SCM Tenant TSG ID\n",
+    )
+    source_folder = typer.prompt(
+        default="Prisma Access",
+        show_default=True,
+        text="Source Configuration Folder\n",
+    )
 
-    typer.echo("Enter destination Strata Cloud Manager credentials:")
-    dest_client_id = typer.prompt("Destination Client ID")
-    dest_client_secret = typer.prompt("Destination Client Secret", hide_input=True)
-    dest_tsg = typer.prompt("Destination Tenant TSG")
-    dest_folder = typer.prompt("Destination Folder", default="Prisma Access")
-
-    token_url = typer.prompt(
-        "Token URL",
-        default="https://auth.apps.paloaltonetworks.com/oauth2/access_token",
+    typer.echo("\n" + "-" * 79 + "\n\tEnter destination SCM credentials (where are you cloning to?)\n" + "-" * 79)
+    dest_client_id = typer.prompt(
+        default="example@0987654321.iam.panserviceaccount.com",
+        text="Destination SCM Client ID\n",
+        show_default=True,
+    )
+    dest_client_secret = typer.prompt(
+        default="87654321-4321-4321-4321-120987654321",
+        hide_input=True,
+        show_default=True,
+        text="Destination SCM Client Secret (input hidden)\n",
+    )
+    dest_tsg = typer.prompt(
+        default="0987654321",
+        show_default=True,
+        text="Destination SCM Tenant TSG ID\n",
+    )
+    dest_folder = typer.prompt(
+        default="Prisma Access",
+        show_default=True,
+        text="Destination Configuration Folder\n",
     )
 
     # Build data dictionary
     data = {
         "oauth": {
-            "token_url": token_url,
             "source": {
                 "client_id": source_client_id,
                 "client_secret": source_client_secret,
@@ -72,9 +100,9 @@ def create_secrets_file(
     try:
         with open(output_file, "w") as f:
             yaml.dump(data, f)
-        logger.info(f"Authentication file written to {output_file}")
     except Exception as e:
         logger.error(f"Error writing authentication file: {e}")
         raise typer.Exit(code=1)
 
-    typer.echo("Authentication file created successfully.")
+    typer.echo("\n" + "-" * 79 + f"\n\tAuthentication file created successfully `{output_file}`\n" + "-" * 79 + "\n")
+    typer.echo("*" * 79 )
