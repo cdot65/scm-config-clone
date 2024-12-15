@@ -25,6 +25,7 @@ from scm_config_clone import (
     application_filters,
     application_groups,
     external_dynamic_lists,
+    services,
     create_settings,
     tags,
 )
@@ -88,6 +89,18 @@ app.command(
     name="edls",
     help="Clone external dynamic lists.",
 )(external_dynamic_lists)
+
+# Services
+app.command(
+    name="services",
+    help="Clone services.",
+)(services)
+
+# Service Groups
+app.command(
+    name="service-groups",
+    help="Clone service groupss.",
+)(services)
 
 # Tags
 app.command(
