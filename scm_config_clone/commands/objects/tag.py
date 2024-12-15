@@ -15,26 +15,7 @@ from scm.exceptions import (
 )
 from tabulate import tabulate
 
-from scm_config_clone.utilities.settings import load_settings
-
-
-def parse_csv_option(value: Optional[str]) -> Optional[List[str]]:
-    """
-    Parse a comma-separated string into a list of stripped strings.
-
-    This utility function converts options like "val1,val2,val3"
-    into ["val1", "val2", "val3"]. If the input is None or empty,
-    returns None.
-
-    Args:
-        value: The raw input string from a CLI option.
-
-    Returns:
-        A list of strings if values are present, or None if empty/None.
-    """
-    if not value:
-        return None
-    return [v.strip() for v in value.split(",") if v.strip()]
+from scm_config_clone.utilities import load_settings, parse_csv_option
 
 
 def tags(
