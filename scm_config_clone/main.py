@@ -21,6 +21,7 @@ import typer
 from scm_config_clone import (
     addresses,
     address_groups,
+    applications,
     create_settings,
     tags,
 )
@@ -60,6 +61,12 @@ app.command(
     name="address-groups",
     help="Clone address groups.",
 )(address_groups)
+
+# Applications
+app.command(
+    name="applications",
+    help="Clone applications.",
+)(applications)
 
 # Tags
 app.command(
