@@ -235,3 +235,9 @@ atlassian-ide-plugin.xml
 # Exclude secrets.yaml files
 .secrets.yaml
 secrets.yaml
+/.idea/misc.xml
+/.idea/modules.xml
+/.idea/inspectionProfiles/profiles_settings.xml
+/.idea/inspectionProfiles/Project_Default.xml
+/.idea/scm-config-clone.iml
+/.idea/vcs.xml

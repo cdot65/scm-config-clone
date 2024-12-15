@@ -1,6 +1,6 @@
 ---
 hide:
-    - navigation
+  - navigation
 ---
 
 <style>
@@ -33,13 +33,17 @@ hide:
 
 ---
 
-**Documentation**: <a href="https://cdot65.github.io/scm-config-clone/" target="_blank">https://cdot65.github.io/scm-config-clone/</a>
+**Documentation
+**: <a href="https://cdot65.github.io/scm-config-clone/" target="_blank">https://cdot65.github.io/scm-config-clone/</a>
 
-**Source Code**: <a href="https://github.com/cdot65/scm-config-clone" target="_blank">https://github.com/cdot65/scm-config-clone</a>
+**Source Code
+**: <a href="https://github.com/cdot65/scm-config-clone" target="_blank">https://github.com/cdot65/scm-config-clone</a>
 
 ---
 
-`scm-config-clone` is a command-line tool designed to seamlessly clone configuration objects between Palo Alto Networks Strata Cloud Manager (SCM) tenants. It simplifies the process of migrating configurations such as address objects and address groups from a source tenant to a destination tenant, enhancing efficiency and reducing manual efforts.
+`scm-config-clone` is a command-line tool designed to seamlessly clone configuration objects between Palo Alto Networks
+Strata Cloud Manager (SCM) tenants. It simplifies the process of migrating configurations such as address objects and
+address groups from a source tenant to a destination tenant, enhancing efficiency and reducing manual efforts.
 
 ## Key Features
 
@@ -51,8 +55,10 @@ hide:
 
 ## Workflow
 
-1. **Authentication**: Use the `create-secrets-file` command to generate a `.secrets.yaml` file with your SCM credentials.
-2. **Cloning**: Use the `clone-address-objects` or `clone-address-groups` commands to clone configurations from the source to the destination tenant.
+1. **Authentication**: Use the `create-secrets-file` command to generate a `.secrets.yaml` file with your SCM
+   credentials.
+2. **Cloning**: Use the `clone-address-objects` or `clone-address-groups` commands to clone configurations from the
+   source to the destination tenant.
 3. **Verification**: Verify the cloned configurations in the destination SCM tenant.
 
 ---
@@ -64,21 +70,42 @@ hide:
 <div class="termy">
 
 <!-- termynal -->
+
 ```bash
 $ pip install scm-config-clone
 $ scm-clone --help
-Usage: scm-clone [OPTIONS] COMMAND [ARGS]...
+                                                                                                                                                                                                                                                        
+ Usage: scm-clone [OPTIONS] COMMAND [ARGS]...                                                                                                                                                                                                           
+                                                                                                                                                                                                                                                        
+ Clone configuration from one Strata Cloud Manager tenant to another.                                                                                                                                                                                   
+                                                                                                                                                                                                                                                        
+╭─ Options ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ --install-completion          Install completion for the current shell.                                                                                                                                                                              │
+│ --show-completion             Show completion for the current shell, to copy it or customize the installation.                                                                                                                                       │
+│ --help                        Show this message and exit.                                                                                                                                                                                            │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Commands ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ address-groups           Clone address groups.                                                                                                                                                                                                       │
+│ addresses                Clone addresses.                                                                                                                                                                                                            │
+│ anti-spyware-profiles    Clone anti-spyware profiles.                                                                                                                                                                                                │
+│ application-filters      Clone application filters.                                                                                                                                                                                                  │
+│ application-groups       Clone application groups.                                                                                                                                                                                                   │
+│ applications             Clone applications.                                                                                                                                                                                                         │
+│ decryption-profiles      Clone decryption profiles.                                                                                                                                                                                                  │
+│ dns-security-profiles    Clone DNS Security profiles.                                                                                                                                                                                                │
+│ edls                     Clone external dynamic lists.                                                                                                                                                                                               │
+│ security-rules           Clone security rules.                                                                                                                                                                                                       │
+│ service-groups           Clone service groupss.                                                                                                                                                                                                      │
+│ services                 Clone services.                                                                                                                                                                                                             │
+│ settings                 Create a `settings.yaml` file with configuration needed to accomplish our tasks (required one-time setup).                                                                                                                  │
+│ tags                     Clone tags.                                                                                                                                                                                                                 │
+│ url-categories           Clone URL categories.                                                                                                                                                                                                       │
+│ vulnerability-profiles   Clone vulnerability protection profiles.                                                                                                                                                                                    │
+│ wildfire-profiles        Clone Wildfire AV profiles.                                                                                                                                                                                                 │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 
-  Clone configuration from one Strata Cloud Manager tenant to another.
-
-Options:
-  --help  Show this message and exit.
-
-Commands:
-  clone-address-groups    Clone address groups from source to destination SCM tenant.
-  clone-address-objects   Clone address objects from source to destination SCM tenant.
-  create-secrets-file     Create authentication file.
 ```
+
 </div>
 
 For more detailed usage instructions and examples, refer to the [User Guide](user-guide/introduction.md).
@@ -87,7 +114,8 @@ For more detailed usage instructions and examples, refer to the [User Guide](use
 
 ## Contributing
 
-Contributions are welcome and greatly appreciated. Visit the [Contributing](about/contributing.md) page for guidelines on how to contribute.
+Contributions are welcome and greatly appreciated. Visit the [Contributing](about/contributing.md) page for guidelines
+on how to contribute.
 
 ## License
 
