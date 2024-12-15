@@ -7,27 +7,28 @@
 [![Python versions](https://img.shields.io/pypi/pyversions/scm-config-clone.svg)](https://pypi.org/project/scm-config-clone/)
 [![License](https://img.shields.io/github/license/cdot65/scm-config-clone.svg)](https://github.com/cdot65/scm-config-clone/blob/main/LICENSE)
 
-A command-line tool to clone configuration objects between Palo Alto Networks Strata Cloud Manager (SCM) tenants.
+`scm-config-clone` is a command-line tool designed to seamlessly clone configuration objects between Palo Alto Networks
+Strata Cloud Manager (SCM) tenants. From addresses and tags to application groups and security rules, this tool
+streamlines migration tasks and reduces manual errors.
 
 ## Table of Contents
 
 - [Features](#features)
 - [Installation](#installation)
-- [Usage](#usage)
-  - [Clone Address Objects](#clone-address-objects)
-  - [Clone Address Groups](#clone-address-groups)
-  - [Create Secrets File](#create-secrets-file)
+- [Basic Usage](#basic-usage)
+- [Creating the Settings File](#creating-the-settings-file)
+- [Cloning Objects](#cloning-objects)
+- [Further Reading](#further-reading)
 - [Contributing](#contributing)
 - [License](#license)
-- [Support](#support)
 
 ## Features
 
-- **Effortless Cloning**: Seamlessly clone address objects and address groups from one SCM tenant to another.
-- **User-Friendly CLI**: Built with [Typer](https://typer.tiangolo.com/) for an intuitive command-line experience.
-- **Secure Authentication**: Generate a `.secrets.yaml` file to securely store your SCM credentials.
-- **Customizable Folders**: Specify source and destination folders to organize your configurations.
-- **Extensible Design**: Structured to allow easy addition of new commands and features in the future.
+- **Simple Setup**: Store credentials and defaults in a `settings.yaml` file for reuse.
+- **Robust Cloning**: Supports multiple object types (addresses, tags, services, security rules, and more).
+- **Extensive Filters**: Exclude specific folders, snippets, or devices to narrow down cloned objects.
+- **Flexible Controls**: Run in `dry-run` mode, auto-approve changes, suppress console output, and create reports.
+- **Commit & Push**: Automatically commit changes after objects are cloned.
 
 ## Installation
 
@@ -35,131 +36,72 @@ A command-line tool to clone configuration objects between Palo Alto Networks St
 
 - Python 3.10 or higher
 
-Install the package via pip:
+Install directly from PyPI:
 
 ```bash
 pip install scm-config-clone
 ```
 
-## Usage
+## Basic Usage
 
-The `scm-clone` utility offers several commands:
-
-- [`clone-address-objects`](#clone-address-objects): Clone address objects between SCM tenants.
-- [`clone-address-groups`](#clone-address-groups): Clone address groups between SCM tenants.
-- [`create-secrets-file`](#create-secrets-file): Generate a secrets file for authentication.
-
-### Clone Address Objects
-
-Clone address objects from the source SCM tenant to the destination tenant.
+Once installed, the primary command is `scm-clone`. Running `--help` displays global options and available sub-commands:
 
 ```bash
-scm-clone clone-address-objects --settings-file <path_to_secrets_yaml>
+scm-clone --help
 ```
 
-**Options**:
+You’ll see a list of commands like `addresses`, `tags`, `services`, `security-rules`, and `settings`.
 
-- `--settings-file`, `-s`: Path to the YAML file containing SCM credentials (default: `.secrets.yaml`).
+## Creating the Settings File
 
-**Example**:
+Before cloning, create a `settings.yaml` file to store SCM credentials and defaults:
 
 ```bash
-scm-clone clone-address-objects
+scm-clone settings
 ```
 
-**Sample Output**:
+You’ll be prompted for source/destination credentials, logging level, and defaults for `auto_approve`, `create_report`,
+`dry_run`, and `quiet`. Once done, `settings.yaml` will be created in the current directory. Subsequent commands read
+from it, eliminating the need to re-enter credentials or defaults.
 
-```
-Starting address objects migration...
-Retrieved 15 address objects from source.
-Successfully created 15 address objects in destination.
-Address objects migration completed successfully.
-```
+## Cloning Objects
 
-### Clone Address Groups
-
-Clone address groups from the source SCM tenant to the destination tenant.
+With `settings.yaml` ready, cloning objects typically involves specifying a folder and object type. For example, to
+clone address objects:
 
 ```bash
-scm-clone clone-address-groups --settings-file <path_to_secrets_yaml>
+scm-clone addresses --folder "Network-Folder"
 ```
 
-**Options**:
-
-- `--settings-file`, `-s`: Path to the YAML file containing SCM credentials (default: `.secrets.yaml`).
-
-**Example**:
+If `auto_approve` is disabled by default in `settings.yaml`, you’ll be prompted before actual creation. If you wish to
+override this at runtime:
 
 ```bash
-scm-clone clone-address-groups
+scm-clone addresses --folder "Network-Folder" -A
 ```
 
-**Sample Output**:
-
-```
-Starting address groups migration...
-Retrieved 8 address groups from source.
-Successfully created 8 address groups in destination.
-Address groups migration completed successfully.
-```
-
-### Create Secrets File
-
-Generate a `.secrets.yaml` file to store your SCM credentials securely.
+This command auto-approves without prompting. Similarly, to run in dry-run mode or commit after creation:
 
 ```bash
-scm-clone create-secrets-file --output-file <path_to_secrets_yaml>
+scm-clone addresses --folder "Network-Folder" -D --commit-and-push
 ```
 
-**Options**:
+This simulates the creation without applying changes (`-D`) and would commit changes if actually applied. Remove `-D` to
+run it for real.
 
-- `--output-file`, `-o`: Path where the secrets YAML file will be saved (default: `.secrets.yaml`).
+## Further Reading
 
-**Example**:
-
-```bash
-scm-clone create-secrets-file
-```
-
-**Sample Interaction**:
-
-```
-Creating authentication file...
-Enter source Strata Cloud Manager credentials:
-Source Client ID: <your_source_client_id>
-Source Client Secret: <your_source_client_secret>
-Source Tenant TSG: <your_source_tsg>
-Source Folder [Prisma Access]:
-Enter destination Strata Cloud Manager credentials:
-Destination Client ID: <your_destination_client_id>
-Destination Client Secret: <your_destination_client_secret>
-Destination Tenant TSG: <your_destination_tsg>
-Destination Folder [Prisma Access]:
-Token URL [https://auth.apps.paloaltonetworks.com/oauth2/access_token]:
-Authentication file written to .secrets.yaml
-Authentication file created successfully.
-```
+- [Commands Reference](https://cdot65.github.io/scm-config-clone/user-guide/python/commands/): Detailed command flags,
+  workflows, and parameters.
+- [Examples](https://cdot65.github.io/scm-config-clone/user-guide/python/examples/): Practical, real-world usage
+  patterns and integrations.
+- [Getting Started](https://cdot65.github.io/scm-config-clone/user-guide/python/getting-started/): Step-by-step guide to
+  initial setup and cloning workflows.
 
 ## Contributing
 
-We welcome contributions! To contribute:
-
-1. Fork the repository.
-2. Create a new feature branch (`git checkout -b feature/your-feature`).
-3. Commit your changes (`git commit -m 'Add new feature'`).
-4. Push to your branch (`git push origin feature/your-feature`).
-5. Open a Pull Request.
-
-Ensure your code adheres to the project's coding standards and includes tests where appropriate.
+Contributions are welcome! Please see the [CONTRIBUTING](CONTRIBUTING.md) file for guidelines.
 
 ## License
 
-This project is licensed under the Apache 2.0 License. See the [LICENSE](./LICENSE) file for details.
-
-## Support
-
-For support and questions, please refer to the [SUPPORT.md](./SUPPORT.md) file in this repository.
-
----
-
-*Detailed documentation will be provided on our GitHub Pages site soon.*
+`scm-config-clone` is licensed under the Apache 2.0 License. See the [LICENSE](./LICENSE) file for more details.
