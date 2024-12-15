@@ -21,13 +21,20 @@ import typer
 from scm_config_clone import (
     addresses,
     address_groups,
+    anti_spyware_profiles,
     applications,
     application_filters,
     application_groups,
-    external_dynamic_lists,
-    services,
     create_settings,
+    decryption_profiles,
+    dns_security_profiles,
+    external_dynamic_lists,
+    security_rules,
+    services,
     tags,
+    url_categories,
+    vulnerability_protection_profiles,
+    wildfire_antivirus_profiles,
 )
 
 # Initialize Typer app
@@ -111,6 +118,49 @@ app.command(
 # ---------------------------------------------------------------------------------------------------------------------
 # Security Services
 # ---------------------------------------------------------------------------------------------------------------------
+
+# Anti-Spyware Profiles
+app.command(
+    name="anti-spyware-profiles",
+    help="Clone anti-spyware profiles.",
+)(anti_spyware_profiles)
+
+
+# Decryption Profiles
+app.command(
+    name="decryption-profiles",
+    help="Clone decryption profiles.",
+)(decryption_profiles)
+
+# DNS Security Profiles
+app.command(
+    name="dns-security-profiles",
+    help="Clone DNS Security profiles.",
+)(dns_security_profiles)
+
+# Security Rules
+app.command(
+    name="security-rules",
+    help="Clone security rules.",
+)(security_rules)
+
+# URL Categories Rules
+app.command(
+    name="url-categories",
+    help="Clone URL categories.",
+)(url_categories)
+
+# Vulnerability Protection Profiles
+app.command(
+    name="vulnerability-profiles",
+    help="Clone vulnerability protection profiles.",
+)(vulnerability_protection_profiles)
+
+# Wildfire AV Profiles
+app.command(
+    name="wildfire-profiles",
+    help="Clone Wildfire AV profiles.",
+)(wildfire_antivirus_profiles)
 
 
 if __name__ == "__main__":
