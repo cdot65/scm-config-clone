@@ -20,6 +20,7 @@ import typer
 
 from scm_config_clone import (
     addresses,
+    address_groups,
     create_settings,
     tags,
 )
@@ -34,21 +35,42 @@ app = typer.Typer(
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Register commands with explicit names and help text
+# ---------------------------------------------------------------------------------------------------------------------
+# scm-clone Configuration
+# ---------------------------------------------------------------------------------------------------------------------
+
+# Create a `settings.yaml` file with configuration needed to accomplish our tasks (required one-time setup)
 app.command(
     name="settings",
-    help="Create a YAML file containing the settings of our SCM cloning job (required for authentication).",
+    help="Create a `settings.yaml` file with configuration needed to accomplish our tasks (required one-time setup).",
 )(create_settings)
 
+# ---------------------------------------------------------------------------------------------------------------------
+# Objects
+# ---------------------------------------------------------------------------------------------------------------------
+
+# Addresses
 app.command(
     name="addresses",
-    help="Clone address objects from the source SCM tenant to the destination SCM tenant.",
+    help="Clone addresses.",
 )(addresses)
 
+# Address Groups
+app.command(
+    name="address-groups",
+    help="Clone address groups.",
+)(address_groups)
+
+# Tags
 app.command(
     name="tags",
-    help="Clone tag objects from the source SCM tenant to the destination SCM tenant, filtered by the specified folder.",
+    help="Clone tags.",
 )(tags)
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Security Services
+# ---------------------------------------------------------------------------------------------------------------------
+
 
 if __name__ == "__main__":
     app()
