@@ -6,18 +6,23 @@ SCM Config Clone CLI Application
 Provides commands to clone configuration objects between SCM tenants.
 
 Commands:
-- `clone-address-objects`: Clone address objects.
-- `create-secrets-file`: Create authentication file.
+- `addresses`: Clone address objects.
+- `settings`: Create settings file.
+- `tags`: Clone tag objects from source to destination tenant, focusing on a specific folder.
 
 Usage:
     scm-clone <command> [OPTIONS]
 """
 
-import typer
 import logging
 
-from scm_config_clone.commands.create_secrets_file import create_secrets_file
-from scm_config_clone.commands.objects import clone_address_objects
+import typer
+
+from scm_config_clone import (
+    addresses,
+    create_settings,
+    tags,
+)
 
 # Initialize Typer app
 app = typer.Typer(
@@ -29,16 +34,21 @@ app = typer.Typer(
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Register commands with clearer parameters
+# Register commands with explicit names and help text
 app.command(
-    name="create-secrets-file",
-    help="Create a YAML file containing SCM authentication details.",
-)(create_secrets_file)
+    name="settings",
+    help="Create a YAML file containing the settings of our SCM cloning job (required for authentication).",
+)(create_settings)
 
 app.command(
-    name="clone-address-objects",
+    name="addresses",
     help="Clone address objects from the source SCM tenant to the destination SCM tenant.",
-)(clone_address_objects)
+)(addresses)
+
+app.command(
+    name="tags",
+    help="Clone tag objects from the source SCM tenant to the destination SCM tenant, filtered by the specified folder.",
+)(tags)
 
 if __name__ == "__main__":
     app()
