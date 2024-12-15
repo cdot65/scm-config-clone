@@ -1,94 +1,124 @@
 # Getting Started with scm-config-clone
 
-Welcome to the `scm-config-clone` tool! This guide will walk you through the initial setup and basic usage of the tool.
+This guide will help you get started with `scm-config-clone`, from initial configuration to your first cloning
+operation.
 
-## Step 1: Create a Secrets File
+## Step 1: Create a Settings File
 
-Before cloning configurations, you need to create a `.secrets.yaml` file containing your SCM credentials.
+Before cloning configurations, you need to create a `settings.yaml` file containing your SCM credentials, logging
+preferences, and default operational flags (e.g., `auto_approve`, `dry_run`, `quiet`, `create_report`).
 
-Run the following command:
+To create the `settings.yaml` file, run:
 
 <div class="termy">
-
 <!-- termynal -->
 ```bash
-$ scm-clone create-secrets-file
+scm-clone settings
 ```
+
 </div>
 
-You'll be prompted to enter your source and destination SCM credentials.
+You will be prompted to enter:
+
+- Source SCM credentials (client_id, client_secret, tsg_id)
+- Destination SCM credentials (client_id, client_secret, tsg_id)
+- Logging level (e.g., INFO)
+- Additional options like `auto_approve`, `create_report`, `dry_run`, and `quiet`.
+
+After completion, `settings.yaml` is generated in your current directory.
 
 **Sample Interaction:**
 
 <div class="termy">
-
 <!-- termynal -->
 ```bash
-$ scm-clone create-secrets-file
-Creating authentication file...
-Enter source Strata Cloud Manager credentials:
-Source Client ID: <your_source_client_id>
-Source Client Secret: <your_source_client_secret>
-Source Tenant TSG: <your_source_tsg>
-Source Folder [Prisma Access]:
-Enter destination Strata Cloud Manager credentials:
-Destination Client ID: <your_destination_client_id>
-Destination Client Secret: <your_destination_client_secret>
-Destination Tenant TSG: <your_destination_tsg>
-Destination Folder [Prisma Access]:
-Token URL [https://auth.apps.paloaltonetworks.com/oauth2/access_token]:
-Authentication file written to .secrets.yaml
-Authentication file created successfully.
+scm-clone settings
 ```
 </div>
 
-The resulting file will look somthing like this:
+*Prompts:*
 
-<div class="termy">
+- Source SCM Client ID, Secret, TSG
+- Destination SCM Client ID, Secret, TSG
+- Desired Logging Level
+- Confirm if you want `auto_approve`, `create_report`, `dry_run`, `quiet`
 
-<!-- termynal -->
+A sample `settings.yaml` might look like:
+
 ```yaml
 oauth:
-  destination:
-    client_id: "this-is-a-placeholder"
-    client_secret: "this-is-a-placeholder"
-    folder: "this-is-a-placeholder"
-    tsg: "this-is-a-placeholder"
   source:
-    client_id: "this-is-a-placeholder"
-    client_secret: "this-is-a-placeholder"
-    folder: "this-is-a-placeholder"
-    tsg: "this-is-a-placeholder"
-  token_url: "https://auth.apps.paloaltonetworks.com/oauth2/access_token"
+    client_id: "source_client_id"
+    client_secret: "source_client_secret"
+    tsg: "source_tsg_id"
+  destination:
+    client_id: "dest_client_id"
+    client_secret: "dest_client_secret"
+    tsg: "dest_tsg_id"
+logging: INFO
+auto_approve: false
+create_report: false
+dry_run: false
+quiet: false
 ```
-</div>
 
-## Step 2: Clone Address Objects
+Once `settings.yaml` is in place, all subsequent commands will use these defaults.
 
-To clone address objects from the source to the destination tenant, run:
+## Step 2: Cloning Configurations
+
+With `settings.yaml` ready, you can clone various objects without having to re-enter credentials. For example, to clone
+address objects:
 
 <div class="termy">
-
 <!-- termynal -->
 ```bash
-$ scm-clone clone-address-objects
+scm-clone addresses --folder "Network-Folder"
 ```
 </div>
 
-The tool will use the credentials from `.secrets.yaml`.
+If `auto_approve` is `false`, you'll be prompted before actually creating the objects. The tool retrieves objects from
+the specified folder (`Network-Folder`), displays them (unless `quiet` is enabled), and asks for confirmation (if
+`auto_approve` is not set to true).
 
-## Step 3: Clone Address Groups
+If you decide you want to run in dry-run mode or commit changes after creation, simply add the corresponding flags:
 
-To clone address groups, run:
+- Dry-run:
 
-<div class="termy">
+  <div class="termy">
+  <!-- termynal -->
+  ```bash
+  scm-clone addresses --folder "Network-Folder" -D
+  ```
+  </div>
 
-<!-- termynal -->
-```bash
-$ scm-clone clone-address-groups
-```
-</div>
+- Commit after creation:
 
----
+  <div class="termy">
+  <!-- termynal -->
+  ```bash
+  scm-clone addresses --folder "Network-Folder" --commit-and-push
+  ```
+  </div>
 
-You've successfully set up and used `scm-config-clone` to clone configurations between SCM tenants. For more advanced usage and options, refer to the [Commands](commands.md) section.
+## Step 3: Cloning Other Objects
+
+Just like addresses, you can clone:
+
+- Tag objects: `scm-clone tags --folder "Texas"`
+- Services: `scm-clone services --folder "Texas"`
+- Security rules: `scm-clone security-rules --folder "cdot65"`
+
+Each command respects the defaults in `settings.yaml`, and you can override them at runtime with flags like `-A` for
+auto-approve or `-Q` for quiet mode.
+
+## Next Steps
+
+With your `settings.yaml` in place and an understanding of how to run commands, you can:
+
+- Leverage filtering flags (`--exclude-folders`, `--exclude-snippets`, `--exclude-devices`) to narrow down what gets
+  cloned.
+- Use `--create-report` to record the outcome of cloning operations in `result.csv`.
+- Adjust `--logging-level` for more or less verbosity.
+
+For more detailed reference on commands and their arguments, see the [Commands Reference](commands.md)
+and [Examples](examples.md) pages.

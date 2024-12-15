@@ -10,7 +10,7 @@ If you encounter issues while using `scm-config-clone`, this guide provides solu
 
 **Solution:**
 
-- Ensure that your credentials in `.secrets.yaml` are correct.
+- Ensure that your credentials in `settings.yaml` are correct.
 - Verify that your client IDs and secrets are valid.
 - Check for typos in the tenant TSG values.
 
@@ -40,7 +40,6 @@ If you encounter issues while using `scm-config-clone`, this guide provides solu
 
 **Solution:**
 
-- Verify that the folder names specified in `.secrets.yaml` are correct.
 - Ensure that the folders exist in both source and destination tenants.
 
 ## Logging
@@ -49,4 +48,5 @@ If you encounter issues while using `scm-config-clone`, this guide provides solu
 
 ## Getting Help
 
-If you're unable to resolve an issue, please open an issue on our [GitHub repository](https://github.com/cdot65/scm-config-clone/issues) with details about the problem.
+If you're unable to resolve an issue, please open an issue on
+our [GitHub repository](https://github.com/cdot65/scm-config-clone/issues) with details about the problem.
