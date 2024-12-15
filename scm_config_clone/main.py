@@ -23,6 +23,7 @@ from scm_config_clone import (
     address_groups,
     applications,
     application_filters,
+    application_groups,
     create_settings,
     tags,
 )
@@ -74,6 +75,12 @@ app.command(
     name="application-filters",
     help="Clone application filters.",
 )(application_filters)
+
+# Application Groups
+app.command(
+    name="application-groups",
+    help="Clone application groups.",
+)(application_groups)
 
 # Tags
 app.command(
