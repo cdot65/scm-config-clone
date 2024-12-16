@@ -54,12 +54,12 @@ address objects:
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone addresses --folder "Network-Folder"
+scm-clone addresses --folder "Texas"
 ```
 </div>
 
 If `auto_approve` is `false`, you'll be prompted before actually creating the objects. The tool retrieves objects from
-the specified folder (`Network-Folder`), displays them (unless `quiet` is enabled), and asks for confirmation (if
+the specified folder (`Texas`), displays them (unless `quiet` is enabled), and asks for confirmation (if
 `auto_approve` is not set to true).
 
 If you decide you want to run in dry-run mode or commit changes after creation, simply add the corresponding flags:
@@ -69,7 +69,7 @@ If you decide you want to run in dry-run mode or commit changes after creation, 
   <div class="termy">
   <!-- termynal -->
   ```bash
-  scm-clone addresses --folder "Network-Folder" -D
+  scm-clone addresses --folder "Texas" -D
   ```
   </div>
 
@@ -78,7 +78,7 @@ If you decide you want to run in dry-run mode or commit changes after creation, 
   <div class="termy">
   <!-- termynal -->
   ```bash
-  scm-clone addresses --folder "Network-Folder" --commit-and-push
+  scm-clone addresses --folder "Texas" --commit-and-push
   ```
   </div>
 
