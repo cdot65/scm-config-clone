@@ -49,15 +49,15 @@ address groups from a source tenant to a destination tenant, enhancing efficienc
 
 - **Effortless Cloning**: Seamlessly clone address objects and address groups from one SCM tenant to another.
 - **User-Friendly CLI**: Built with [Typer](https://typer.tiangolo.com/) for an intuitive command-line experience.
-- **Secure Authentication**: Generate a `.secrets.yaml` file to securely store your SCM credentials.
+- **Secure Authentication**: Generate a `settings.yaml` file to securely store your SCM credentials.
 - **Customizable Folders**: Specify source and destination folders to organize your configurations.
 - **Extensible Design**: Structured to allow easy addition of new commands and features in the future.
 
 ## Workflow
 
-1. **Authentication**: Use the `create-secrets-file` command to generate a `.secrets.yaml` file with your SCM
-   credentials.
-2. **Cloning**: Use the `clone-address-objects` or `clone-address-groups` commands to clone configurations from the
+1. **Authentication**: Use the `settings` command to generate a `settings.yaml` file with your SCM
+   credentials, and other tool options.
+2. **Cloning**: Use the appropriate command to clone configurations from the
    source to the destination tenant.
 3. **Verification**: Verify the cloned configurations in the destination SCM tenant.
 

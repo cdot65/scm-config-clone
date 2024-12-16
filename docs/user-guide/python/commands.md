@@ -136,7 +136,7 @@ Below are some real-world scenarios demonstrating how to use `scm-clone` with va
    <div class="termy">
    <!-- termynal -->
    ```bash
-   scm-clone addresses --folder "SomeFolder"
+   scm-clone addresses --folder "Texas"
    ```
    </div>
 
@@ -150,18 +150,18 @@ If you set `auto_approve: false` in `settings.yaml`, you can override it at runt
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone addresses --folder "SomeFolder" -A
+scm-clone addresses --folder "Texas" -A
 ```
 </div>
 
 This auto-approves changes without prompting.
 
-Similarly, if you want to run in dry-run mode:
+Similarly, if you want to run in dry-run mode (coming soon):
 
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone addresses --folder "SomeFolder" -D
+scm-clone addresses --folder "Texas" -D
 ```
 </div>
 
@@ -174,14 +174,14 @@ You can exclude certain folders, snippets, or devices from retrieval:
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone tags --folder "Application-Folder" \
+scm-clone tags --folder "Texas" \
                --exclude-folders "All,Default" \
                --exclude-snippets "predefined" \
                --exclude-devices "DeviceA"
 ```
 </div>
 
-This command retrieves tag objects from `"Application-Folder"`, excluding any from the `"All"` or `"Default"` folders,
+This command retrieves tag objects from `"Texas"`, excluding any from the `"All"` or `"Default"` folders,
 any that come from snippet `"predefined"`, and any associated with `DeviceA`.
 
 ### Commit and Push Changes
@@ -204,7 +204,7 @@ If `create_report` is enabled, results will be appended to `result.csv`. To over
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone applications --folder "App-Folder" -R
+scm-clone applications --folder "Texas" -R
 ```
 </div>
 

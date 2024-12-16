@@ -25,25 +25,7 @@ You will be prompted to enter:
 - Logging level (e.g., INFO)
 - Additional options like `auto_approve`, `create_report`, `dry_run`, and `quiet`.
 
-After completion, `settings.yaml` is generated in your current directory.
-
-**Sample Interaction:**
-
-<div class="termy">
-<!-- termynal -->
-```bash
-scm-clone settings
-```
-</div>
-
-*Prompts:*
-
-- Source SCM Client ID, Secret, TSG
-- Destination SCM Client ID, Secret, TSG
-- Desired Logging Level
-- Confirm if you want `auto_approve`, `create_report`, `dry_run`, `quiet`
-
-A sample `settings.yaml` might look like:
+After completion, `settings.yaml` is generated in your current directory, it should look like:
 
 ```yaml
 oauth:
