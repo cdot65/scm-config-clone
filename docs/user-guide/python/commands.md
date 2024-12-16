@@ -191,7 +191,7 @@ If you want to commit your changes automatically after creation:
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone address-groups --folder "Network-Folder" --commit-and-push
+scm-clone address-groups --folder "Texas" --commit-and-push
 ```
 </div>
 
