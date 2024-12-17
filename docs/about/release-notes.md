@@ -5,6 +5,17 @@ enhancements, and fixes in each version of the tool.
 
 ---
 
+## Version 0.2.2
+
+**Release Date:** December 18th, 2024
+
+### Introduction
+
+- **dependency update**:
+    - Forgot to add `pyyaml` to list of dependencies.
+
+---
+
 ## Version 0.2.1
 
 **Release Date:** December 15th, 2024
