@@ -6,6 +6,7 @@ from .commands.objects.application import applications
 from .commands.objects.application_filters import application_filters
 from .commands.objects.application_group import application_groups
 from .commands.objects.external_dynamic_lists import external_dynamic_lists
+from .commands.objects.hip_objects import hip_objects
 from .commands.objects.service import services
 from .commands.objects.service_group import service_groups
 from .commands.objects.tag import tags
