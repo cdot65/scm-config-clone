@@ -16,7 +16,11 @@ from scm.exceptions import (
 from scm.models.objects.address import AddressCreateModel, AddressResponseModel
 from tabulate import tabulate
 
-from scm_config_clone.utilities import load_settings, parse_csv_option
+from scm_config_clone.utilities import (
+    compare_object_lists,
+    load_settings,
+    parse_csv_option,
+)
 
 
 def build_create_params(src_obj: AddressResponseModel, folder: str) -> Dict[str, Any]:
@@ -95,7 +99,6 @@ def addresses(
         help="If set, commit the changes on the destination tenant after object creation.",
         is_flag=True,
     ),
-    # Existing flag that already was present
     auto_approve: bool = typer.Option(
         None,
         "--auto-approve",
@@ -103,7 +106,6 @@ def addresses(
         help="If set, skip the confirmation prompt and automatically proceed with creation.",
         is_flag=True,
     ),
-    # New flags introduced
     create_report: bool = typer.Option(
         None,
         "--create-report",
@@ -176,7 +178,6 @@ def addresses(
     settings = load_settings(settings_file)
 
     # Apply fallback logic: if a flag wasn't provided at runtime, use settings.yaml values
-    # If a flag is provided (not None), use the provided value; otherwise, use settings default.
     auto_approve = settings["auto_approve"] if auto_approve is None else auto_approve
     create_report = (
         settings["create_report"] if create_report is None else create_report
@@ -197,7 +198,7 @@ def addresses(
     exclude_snippets_list = parse_csv_option(exclude_snippets)
     exclude_devices_list = parse_csv_option(exclude_devices)
 
-    # Authenticate and retrieve from source
+    # Authenticate with source
     try:
         source_creds = settings["source_scm"]
         source_client = Scm(
@@ -214,82 +215,17 @@ def addresses(
         logger.error(f"Unexpected error with source authentication: {e}")
         raise typer.Exit(code=1)
 
-    # Retrieve address objects from the source
+    # Authenticate with destination
     try:
-        source_addresses = Address(source_client, max_limit=5000)
-        address_objects = source_addresses.list(
-            folder=folder,
-            exact_match=True,
-            exclude_folders=exclude_folders_list,
-            exclude_snippets=exclude_snippets_list,
-            exclude_devices=exclude_devices_list,
-        )
-        logger.info(
-            f"Retrieved {len(address_objects)} address objects from source tenant folder '{folder}'."
-        )
-    except Exception as e:
-        logger.error(f"Error retrieving address objects from source: {e}")
-        raise typer.Exit(code=1)
-
-    # If not quiet_mode, display retrieved objects
-    if address_objects and not quiet_mode:
-        addr_table = []
-        for addr in address_objects:
-            if addr.ip_netmask:
-                addr_value = addr.ip_netmask
-            elif addr.fqdn:
-                addr_value = addr.fqdn
-            elif addr.ip_range:
-                addr_value = addr.ip_range
-            elif addr.ip_wildcard:
-                addr_value = addr.ip_wildcard
-            else:
-                addr_value = "Unknown Type"
-
-            addr_table.append(
-                [
-                    addr.name,
-                    addr.folder,
-                    addr_value,
-                    addr.description or "",
-                ]
-            )
-
-        typer.echo(
-            tabulate(
-                addr_table,
-                headers=[
-                    "Name",
-                    "Folder",
-                    "Value",
-                    "Description",
-                ],
-                tablefmt="fancy_grid",
-            )
-        )
-    elif not address_objects:
-        typer.echo("No address objects found in the source folder.")
-
-    # Prompt for confirmation if not auto-approved and objects found
-    if address_objects and not auto_approve:
-        proceed = typer.confirm(
-            "Do you want to proceed with creating these objects in the destination tenant?"
-        )
-        if not proceed:
-            typer.echo("Aborting cloning operation.")
-            raise typer.Exit(code=0)
-
-    # Authenticate with destination tenant
-    try:
-        dest_creds = settings["destination_scm"]
+        destination_creds = settings["destination_scm"]
         destination_client = Scm(
-            client_id=dest_creds["client_id"],
-            client_secret=dest_creds["client_secret"],
-            tsg_id=dest_creds["tenant"],
+            client_id=destination_creds["client_id"],
+            client_secret=destination_creds["client_secret"],
+            tsg_id=destination_creds["tenant"],
             log_level=logging_level,
         )
         logger.info(
-            f"Authenticated with destination SCM tenant: {dest_creds['tenant']}"
+            f"Authenticated with destination SCM tenant: {destination_creds['tenant']}"
         )
     except (AuthenticationError, KeyError) as e:
         logger.error(f"Error authenticating with destination tenant: {e}")
@@ -298,31 +234,101 @@ def addresses(
         logger.error(f"Unexpected error with destination authentication: {e}")
         raise typer.Exit(code=1)
 
-    # Create address objects in destination
-    destination_addresses = Address(
-        destination_client,
-        max_limit=5000,
+    # Retrieve address objects from source
+    try:
+        source_addresses = Address(source_client, max_limit=5000)
+        source_objects = source_addresses.list(
+            folder=folder,
+            exact_match=True,
+            exclude_folders=exclude_folders_list,
+            exclude_snippets=exclude_snippets_list,
+            exclude_devices=exclude_devices_list,
+        )
+        logger.info(
+            f"Retrieved {len(source_objects)} address objects from source tenant folder '{folder}'."
+        )
+    except Exception as e:
+        logger.error(f"Error retrieving address objects from source: {e}")
+        raise typer.Exit(code=1)
+
+    # Retrieve address objects from destination
+    try:
+        destination_addresses = Address(destination_client, max_limit=5000)
+        destination_objects = destination_addresses.list(
+            folder=folder,
+            exact_match=True,
+            exclude_folders=exclude_folders_list,
+            exclude_snippets=exclude_snippets_list,
+            exclude_devices=exclude_devices_list,
+        )
+        logger.info(
+            f"Retrieved {len(destination_objects)} address objects from destination tenant folder '{folder}'."
+        )
+    except Exception as e:
+        logger.error(f"Error retrieving address objects from destination: {e}")
+        raise typer.Exit(code=1)
+
+    # Compare and get the status information
+    comparison_results = compare_object_lists(
+        source_objects,
+        destination_objects,
     )
+
+    if source_objects and not quiet_mode:
+        addr_table = []
+        for result in comparison_results:
+            # 'x' if already configured else ''
+            status = "x" if result["already_configured"] else ""
+            addr_table.append([result["name"], status])
+
+        typer.echo(
+            tabulate(
+                addr_table,
+                headers=["Name", "Destination Status"],
+                tablefmt="fancy_grid",
+            )
+        )
+
+    # Prompt if not auto-approved and objects exist
+    if source_objects and not auto_approve:
+        proceed = typer.confirm(
+            "Do you want to proceed with creating these objects in the destination tenant?"
+        )
+        if not proceed:
+            typer.echo("Aborting cloning operation.")
+            raise typer.Exit(code=0)
+
+    # Determine which objects need to be created (those not already configured)
+    already_configured_names = {
+        res["name"] for res in comparison_results if res["already_configured"]
+    }
+
+    objects_to_create = [
+        obj for obj in source_objects if obj.name not in already_configured_names
+    ]
+
+    # Create address objects in destination
+    destination_addresses = Address(destination_client, max_limit=5000)
     created_objs: List[AddressResponseModel] = []
     error_objects: List[List[str]] = []
 
-    for src_obj in address_objects:
-        try:
-            create_params = build_create_params(
-                src_obj,
-                folder,
-            )
-        except ValueError as ve:
-            error_objects.append(
-                [
-                    src_obj.name,
-                    str(ve),
-                ]
+    for src_obj in objects_to_create:
+        if dry_run:
+            logger.info(
+                f"Skipping creation of address object in destination (dry run): {src_obj.name}"
             )
             continue
 
-        # If dry_run is True, we might skip actual creation in the future.
-        # For now, just proceed as normal until logic is implemented.
+        if create_report:
+            with open("result.csv", "a") as f:
+                f.write(f"Address,{src_obj.name},{src_obj.folder}\n")
+
+        try:
+            create_params = build_create_params(src_obj, folder)
+        except ValueError as ve:
+            error_objects.append([src_obj.name, str(ve)])
+            continue
+
         try:
             new_obj = destination_addresses.create(create_params)
             created_objs.append(new_obj)
@@ -333,46 +339,24 @@ def addresses(
             NameNotUniqueError,
             ObjectNotPresentError,
         ) as e:
-            error_objects.append([src_obj.name, str(e)])
+            error_type = type(e).__name__
+            error_objects.append([src_obj.name, error_type])
             continue
-        except Exception as e:
-            error_objects.append([src_obj.name, str(e)])
+        except Exception:  # noqa
+            error_objects.append([src_obj.name, "unknown error"])
             continue
 
-    # If not quiet_mode, display results
+    # Display results if not quiet_mode
     if created_objs and not quiet_mode:
         typer.echo("\nSuccessfully created the following address objects:")
         created_table = []
         for obj in created_objs:
-            if obj.ip_netmask:
-                value = obj.ip_netmask
-            elif obj.fqdn:
-                value = obj.fqdn
-            elif obj.ip_range:
-                value = obj.ip_range
-            elif obj.ip_wildcard:
-                value = obj.ip_wildcard
-            else:
-                value = "Unknown Type"
-
-            created_table.append(
-                [
-                    obj.name,
-                    obj.folder,
-                    value,
-                    obj.description or "",
-                ]
-            )
+            created_table.append([obj.name])
 
         typer.echo(
             tabulate(
                 created_table,
-                headers=[
-                    "Name",
-                    "Folder",
-                    "Value",
-                    "Description",
-                ],
+                headers=["Name"],
                 tablefmt="fancy_grid",
             )
         )
@@ -382,10 +366,7 @@ def addresses(
         typer.echo(
             tabulate(
                 error_objects,
-                headers=[
-                    "Object Name",
-                    "Error",
-                ],
+                headers=["Object Name", "Error"],
                 tablefmt="fancy_grid",
             )
         )
@@ -413,8 +394,5 @@ def addresses(
             )
         else:
             logger.info("No new address objects were created, skipping commit.")
-
-    # If create_report is True, in the future we will append results to 'result.csv'
-    # For now, logic can be implemented later.
 
     typer.echo("🎉 Address objects cloning completed successfully! 🎉")

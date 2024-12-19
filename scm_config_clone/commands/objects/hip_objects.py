@@ -1,11 +1,11 @@
-# scm_config_clone/commands/objects/service_group.py
+# scm_config_clone/commands/objects/hip_object.py
 
 import logging
 from typing import List, Optional, Any, Dict
 
 import typer
 from scm.client import Scm
-from scm.config.objects import ServiceGroup
+from scm.config.objects import HIPObject
 from scm.exceptions import (
     AuthenticationError,
     InvalidObjectError,
@@ -13,10 +13,7 @@ from scm.exceptions import (
     NameNotUniqueError,
     ObjectNotPresentError,
 )
-from scm.models.objects.service_group import (
-    ServiceGroupCreateModel,
-    ServiceGroupResponseModel,
-)
+from scm.models.objects.hip_object import HIPObjectCreateModel, HIPObjectResponseModel
 from tabulate import tabulate
 
 from scm_config_clone.utilities import (
@@ -26,45 +23,58 @@ from scm_config_clone.utilities import (
 )
 
 
-def build_create_params(
-    src_obj: ServiceGroupResponseModel, folder: str
-) -> Dict[str, Any]:
+def build_create_params(src_obj: HIPObjectResponseModel, folder: str) -> Dict[str, Any]:
     """
-    Construct the dictionary of parameters required to create a new service group object.
+    Construct the dictionary of parameters required to create a new HIP object.
 
-    Given an existing ServiceGroupResponseModel (source object) and a target folder,
+    Given an existing HIPObjectResponseModel (source object) and a target folder,
     this function builds a dictionary with all necessary fields for creating
-    a new service group in the destination tenant. It uses `model_dump` on a Pydantic model
+    a new HIP object in the destination tenant. It uses `model_dump` on a Pydantic model
     to ensure only valid, explicitly set fields are included.
 
     Args:
-        src_obj: The ServiceGroupResponseModel representing the source service group object.
+        src_obj: The HIPObjectResponseModel representing the source HIP object.
         folder: The folder in the destination tenant where the object should be created.
 
     Returns:
-        A dictionary containing the fields required for `ServiceGroup.create()`.
-        This dictionary is validated and pruned by ServiceGroupCreateModel.
+        A dictionary containing the fields required for `HIPObject.create()`.
+        This dictionary is validated and pruned by HIPObjectCreateModel.
     """
     data = {
         "name": src_obj.name,
         "folder": folder,
-        "members": src_obj.members,
-        "tag": src_obj.tag if src_obj.tag else [],
+        "description": src_obj.description if src_obj.description is not None else None,
+        "host_info": src_obj.host_info.model_dump() if src_obj.host_info else None,
+        "network_info": (
+            src_obj.network_info.model_dump() if src_obj.network_info else None
+        ),
+        "patch_management": (
+            src_obj.patch_management.model_dump() if src_obj.patch_management else None
+        ),
+        "disk_encryption": (
+            src_obj.disk_encryption.model_dump() if src_obj.disk_encryption else None
+        ),
+        "mobile_device": (
+            src_obj.mobile_device.model_dump() if src_obj.mobile_device else None
+        ),
+        "certificate": (
+            src_obj.certificate.model_dump() if src_obj.certificate else None
+        ),
     }
 
-    create_model = ServiceGroupCreateModel(**data)
+    create_model = HIPObjectCreateModel(**data)
     return create_model.model_dump(
         exclude_unset=True,
         exclude_none=True,
     )
 
 
-def service_groups(
+def hip_objects(
     folder: Optional[str] = typer.Option(
         None,
         "--folder",
         prompt="Please enter the folder name",
-        help="The folder to focus on when retrieving and cloning service groups.",
+        help="The folder to focus on when retrieving and cloning HIP objects.",
     ),
     exclude_folders: str = typer.Option(
         None,
@@ -129,23 +139,23 @@ def service_groups(
     ),
 ):
     """
-    Clone service group objects from a source SCM tenant to a destination SCM tenant.
+    Clone HIP objects from a source SCM tenant to a destination SCM tenant.
 
-    This Typer CLI command automates the process of retrieving service group objects
+    This Typer CLI command automates the process of retrieving HIP objects
     from a specified folder in a source tenant, optionally filters them out based
     on user-defined exclusion criteria, and then creates them in a destination tenant.
 
     The workflow is:
     1. Load authentication and configuration settings (e.g., credentials, logging) from the YAML file.
     2. If any runtime flags are provided, they override the corresponding settings from the file.
-    3. Authenticate to the source tenant and retrieve service group objects from the given folder.
+    3. Authenticate to the source tenant and retrieve HIP objects from the given folder.
     4. Display the retrieved source objects. If not auto-approved, prompt the user before proceeding.
     5. Authenticate to the destination tenant and create the retrieved objects there.
     6. If `--commit-and-push` is provided and objects were created successfully, commit the changes.
     7. Display the results, including successfully created objects and any errors.
 
     Args:
-        folder: The source folder from which to retrieve service group objects.
+        folder: The source folder from which to retrieve HIP objects.
         exclude_folders: Comma-separated folder names to exclude from source retrieval.
         exclude_snippets: Comma-separated snippet names to exclude from source retrieval.
         exclude_devices: Comma-separated device names to exclude from source retrieval.
@@ -160,7 +170,7 @@ def service_groups(
     Raises:
         typer.Exit: Exits if authentication fails, retrieval fails, or if the user opts not to proceed.
     """
-    typer.echo("🚀 Starting service group objects cloning...")
+    typer.echo("🚀 Starting HIP objects cloning...")
 
     # Load settings from file
     settings = load_settings(settings_file)
@@ -222,10 +232,10 @@ def service_groups(
         logger.error(f"Unexpected error with destination authentication: {e}")
         raise typer.Exit(code=1)
 
-    # Retrieve service group objects from source
+    # Retrieve HIP objects from source
     try:
-        source_service_groups = ServiceGroup(source_client, max_limit=5000)
-        source_objects = source_service_groups.list(
+        source_hip_objects = HIPObject(source_client, max_limit=5000)
+        source_objects = source_hip_objects.list(
             folder=folder,
             exact_match=True,
             exclude_folders=exclude_folders_list,
@@ -233,16 +243,16 @@ def service_groups(
             exclude_devices=exclude_devices_list,
         )
         logger.info(
-            f"Retrieved {len(source_objects)} service group objects from source tenant folder '{folder}'."
+            f"Retrieved {len(source_objects)} HIP objects from source tenant folder '{folder}'."
         )
     except Exception as e:
-        logger.error(f"Error retrieving service group objects from source: {e}")
+        logger.error(f"Error retrieving HIP objects from source: {e}")
         raise typer.Exit(code=1)
 
-    # Retrieve service group objects from destination
+    # Retrieve HIP objects from destination
     try:
-        destination_service_groups = ServiceGroup(destination_client, max_limit=5000)
-        destination_objects = destination_service_groups.list(
+        destination_hip_objects = HIPObject(destination_client, max_limit=5000)
+        destination_objects = destination_hip_objects.list(
             folder=folder,
             exact_match=True,
             exclude_folders=exclude_folders_list,
@@ -250,10 +260,10 @@ def service_groups(
             exclude_devices=exclude_devices_list,
         )
         logger.info(
-            f"Retrieved {len(destination_objects)} service group objects from destination tenant folder '{folder}'."
+            f"Retrieved {len(destination_objects)} HIP objects from destination tenant folder '{folder}'."
         )
     except Exception as e:
-        logger.error(f"Error retrieving service group objects from destination: {e}")
+        logger.error(f"Error retrieving HIP objects from destination: {e}")
         raise typer.Exit(code=1)
 
     # Compare and get the status information
@@ -263,15 +273,15 @@ def service_groups(
     )
 
     if source_objects and not quiet_mode:
-        group_table = []
+        hip_table = []
         for result in comparison_results:
             # 'x' if already configured else ''
             status = "x" if result["already_configured"] else ""
-            group_table.append([result["name"], status])
+            hip_table.append([result["name"], status])
 
         typer.echo(
             tabulate(
-                group_table,
+                hip_table,
                 headers=["Name", "Destination Status"],
                 tablefmt="fancy_grid",
             )
@@ -295,21 +305,21 @@ def service_groups(
         obj for obj in source_objects if obj.name not in already_configured_names
     ]
 
-    # Create service group objects in destination
-    destination_service_groups = ServiceGroup(destination_client, max_limit=5000)
-    created_objs: List[ServiceGroupResponseModel] = []
+    # Create HIP objects in destination
+    destination_hip_objects = HIPObject(destination_client, max_limit=5000)
+    created_objs: List[HIPObjectResponseModel] = []
     error_objects: List[List[str]] = []
 
     for src_obj in objects_to_create:
         if dry_run:
             logger.info(
-                f"Skipping creation of service group object in destination (dry run): {src_obj.name}"
+                f"Skipping creation of HIP object in destination (dry run): {src_obj.name}"
             )
             continue
 
         if create_report:
             with open("result.csv", "a") as f:
-                f.write(f"Service Group,{src_obj.name},{src_obj.folder}\n")
+                f.write(f"HIP Object,{src_obj.name},{src_obj.folder}\n")
 
         try:
             create_params = build_create_params(src_obj, folder)
@@ -318,9 +328,9 @@ def service_groups(
             continue
 
         try:
-            new_obj = destination_service_groups.create(create_params)
+            new_obj = destination_hip_objects.create(create_params)
             created_objs.append(new_obj)
-            logger.info(f"Created service group object in destination: {new_obj.name}")
+            logger.info(f"Created HIP object in destination: {new_obj.name}")
         except (
             InvalidObjectError,
             MissingQueryParameterError,
@@ -336,7 +346,7 @@ def service_groups(
 
     # Display results if not quiet_mode
     if created_objs and not quiet_mode:
-        typer.echo("\nSuccessfully created the following service group objects:")
+        typer.echo("\nSuccessfully created the following HIP objects:")
         created_table = []
         for obj in created_objs:
             created_table.append([obj.name])
@@ -350,7 +360,7 @@ def service_groups(
         )
 
     if error_objects and not quiet_mode:
-        typer.echo("\nSome service group objects failed to be created:")
+        typer.echo("\nSome HIP objects failed to be created:")
         typer.echo(
             tabulate(
                 error_objects,
@@ -364,16 +374,16 @@ def service_groups(
         try:
             commit_params = {
                 "folders": [folder],
-                "description": "Cloned service group objects",
+                "description": "Cloned HIP objects",
                 "sync": True,
             }
-            result = destination_service_groups.commit(**commit_params)
-            job_status = destination_service_groups.get_job_status(result.job_id)
+            result = destination_hip_objects.commit(**commit_params)
+            job_status = destination_hip_objects.get_job_status(result.job_id)
             logger.info(
                 f"Commit job ID {result.job_id} status: {job_status.data[0].status_str}"
             )
         except Exception as e:
-            logger.error(f"Error committing service group objects in destination: {e}")
+            logger.error(f"Error committing HIP objects in destination: {e}")
             raise typer.Exit(code=1)
     else:
         if created_objs and not commit_and_push:
@@ -381,6 +391,6 @@ def service_groups(
                 "Objects created, but --commit-and-push not specified, skipping commit."
             )
         else:
-            logger.info("No new service group objects were created, skipping commit.")
+            logger.info("No new HIP objects were created, skipping commit.")
 
-    typer.echo("🎉 Service group objects cloning completed successfully! 🎉")
+    typer.echo("🎉 HIP objects cloning completed successfully! 🎉")

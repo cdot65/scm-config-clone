@@ -29,8 +29,10 @@ from scm_config_clone import (
     decryption_profiles,
     dns_security_profiles,
     external_dynamic_lists,
+    hip_objects,
     security_rules,
     services,
+    service_groups,
     tags,
     url_categories,
     vulnerability_protection_profiles,
@@ -97,6 +99,12 @@ app.command(
     help="Clone external dynamic lists.",
 )(external_dynamic_lists)
 
+# HIP Objects
+app.command(
+    name="hip-objects",
+    help="Clone hip objects.",
+)(hip_objects)
+
 # Services
 app.command(
     name="services",
@@ -106,8 +114,8 @@ app.command(
 # Service Groups
 app.command(
     name="service-groups",
-    help="Clone service groupss.",
-)(services)
+    help="Clone service groups.",
+)(service_groups)
 
 # Tags
 app.command(

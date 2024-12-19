@@ -16,7 +16,11 @@ from scm.exceptions import (
 from scm.models.objects.service import ServiceCreateModel, ServiceResponseModel
 from tabulate import tabulate
 
-from scm_config_clone.utilities import load_settings, parse_csv_option
+from scm_config_clone.utilities import (
+    compare_object_lists,
+    load_settings,
+    parse_csv_option,
+)
 
 
 def build_create_params(src_obj: ServiceResponseModel, folder: str) -> Dict[str, Any]:
@@ -174,7 +178,7 @@ def services(
         commit_and_push: If True, commit changes in the destination tenant after creation.
         auto_approve: If True or set in settings, skip the confirmation prompt before creating objects.
         create_report: If True or set in settings, create/append a CSV file with task results.
-        dry_run: If True or set in settings, perform a dry run without applying changes (logic TBD).
+        dry_run: If True or set in settings, perform a dry run without applying any changes (logic TBD).
         quiet_mode: If True or set in settings, hide console output except log messages (logic TBD).
         logging_level: If provided, override the logging level from settings.yaml.
         settings_file: Path to the YAML settings file for loading authentication and configuration.
@@ -208,7 +212,7 @@ def services(
     exclude_snippets_list = parse_csv_option(exclude_snippets)
     exclude_devices_list = parse_csv_option(exclude_devices)
 
-    # Authenticate and retrieve from source
+    # Authenticate with source
     try:
         source_creds = settings["source_scm"]
         source_client = Scm(
@@ -225,96 +229,17 @@ def services(
         logger.error(f"Unexpected error with source authentication: {e}")
         raise typer.Exit(code=1)
 
-    # Retrieve service objects from source
+    # Authenticate with destination
     try:
-        source_services = Service(source_client, max_limit=5000)
-        service_objects = source_services.list(
-            folder=folder,
-            exact_match=True,
-            exclude_folders=exclude_folders_list,
-            exclude_snippets=exclude_snippets_list,
-            exclude_devices=exclude_devices_list,
-        )
-        logger.info(
-            f"Retrieved {len(service_objects)} service objects from source tenant folder '{folder}'."
-        )
-    except Exception as e:
-        logger.error(f"Error retrieving service objects from source: {e}")
-        raise typer.Exit(code=1)
-
-    # Display retrieved services if not quiet_mode
-    if service_objects and not quiet_mode:
-        service_table = []
-        for svc in service_objects:
-            if svc.protocol.tcp:
-                protocol_type = "TCP"
-                port_value = svc.protocol.tcp.port
-                timeout = (
-                    svc.protocol.tcp.override.timeout
-                    if svc.protocol.tcp.override
-                    else None
-                )
-            elif svc.protocol.udp:
-                protocol_type = "UDP"
-                port_value = svc.protocol.udp.port
-                timeout = (
-                    svc.protocol.udp.override.timeout
-                    if svc.protocol.udp.override
-                    else None
-                )
-            else:
-                protocol_type = "Unknown"
-                port_value = "N/A"
-                timeout = None
-
-            service_table.append(
-                [
-                    svc.name,
-                    svc.folder,
-                    protocol_type,
-                    port_value,
-                    timeout or "Default",
-                    svc.description or "",
-                ]
-            )
-
-        typer.echo(
-            tabulate(
-                service_table,
-                headers=[
-                    "Name",
-                    "Folder",
-                    "Protocol",
-                    "Ports",
-                    "Timeout",
-                    "Description",
-                ],
-                tablefmt="fancy_grid",
-            )
-        )
-    elif not service_objects:
-        typer.echo("No service objects found in the source folder.")
-
-    # Prompt if not auto-approved and objects exist
-    if service_objects and not auto_approve:
-        proceed = typer.confirm(
-            "Do you want to proceed with creating these objects in the destination tenant?"
-        )
-        if not proceed:
-            typer.echo("Aborting cloning operation.")
-            raise typer.Exit(code=0)
-
-    # Authenticate with destination tenant
-    try:
-        dest_creds = settings["destination_scm"]
+        destination_creds = settings["destination_scm"]
         destination_client = Scm(
-            client_id=dest_creds["client_id"],
-            client_secret=dest_creds["client_secret"],
-            tsg_id=dest_creds["tenant"],
+            client_id=destination_creds["client_id"],
+            client_secret=destination_creds["client_secret"],
+            tsg_id=destination_creds["tenant"],
             log_level=logging_level,
         )
         logger.info(
-            f"Authenticated with destination SCM tenant: {dest_creds['tenant']}"
+            f"Authenticated with destination SCM tenant: {destination_creds['tenant']}"
         )
     except (AuthenticationError, KeyError) as e:
         logger.error(f"Error authenticating with destination tenant: {e}")
@@ -323,12 +248,95 @@ def services(
         logger.error(f"Unexpected error with destination authentication: {e}")
         raise typer.Exit(code=1)
 
+    # Retrieve service objects from source
+    try:
+        source_services = Service(source_client, max_limit=5000)
+        source_objects = source_services.list(
+            folder=folder,
+            exact_match=True,
+            exclude_folders=exclude_folders_list,
+            exclude_snippets=exclude_snippets_list,
+            exclude_devices=exclude_devices_list,
+        )
+        logger.info(
+            f"Retrieved {len(source_objects)} service objects from source tenant folder '{folder}'."
+        )
+    except Exception as e:
+        logger.error(f"Error retrieving service objects from source: {e}")
+        raise typer.Exit(code=1)
+
+    # Retrieve service objects from destination
+    try:
+        destination_services = Service(destination_client, max_limit=5000)
+        destination_objects = destination_services.list(
+            folder=folder,
+            exact_match=True,
+            exclude_folders=exclude_folders_list,
+            exclude_snippets=exclude_snippets_list,
+            exclude_devices=exclude_devices_list,
+        )
+        logger.info(
+            f"Retrieved {len(destination_objects)} service objects from destination tenant folder '{folder}'."
+        )
+    except Exception as e:
+        logger.error(f"Error retrieving service objects from destination: {e}")
+        raise typer.Exit(code=1)
+
+    # Compare and get the status information
+    comparison_results = compare_object_lists(
+        source_objects,
+        destination_objects,
+    )
+
+    if source_objects and not quiet_mode:
+        service_table = []
+        for result in comparison_results:
+            # 'x' if already configured else ''
+            status = "x" if result["already_configured"] else ""
+            service_table.append([result["name"], status])
+
+        typer.echo(
+            tabulate(
+                service_table,
+                headers=["Name", "Destination Status"],
+                tablefmt="fancy_grid",
+            )
+        )
+
+    # Prompt if not auto-approved and objects exist
+    if source_objects and not auto_approve:
+        proceed = typer.confirm(
+            "Do you want to proceed with creating these objects in the destination tenant?"
+        )
+        if not proceed:
+            typer.echo("Aborting cloning operation.")
+            raise typer.Exit(code=0)
+
+    # Determine which objects need to be created (those not already configured)
+    already_configured_names = {
+        res["name"] for res in comparison_results if res["already_configured"]
+    }
+
+    objects_to_create = [
+        obj for obj in source_objects if obj.name not in already_configured_names
+    ]
+
     # Create service objects in destination
     destination_services = Service(destination_client, max_limit=5000)
     created_objs: List[ServiceResponseModel] = []
     error_objects: List[List[str]] = []
 
-    for src_obj in service_objects:
+    for src_obj in objects_to_create:
+        if dry_run:
+            logger.info(
+                f"Skipping creation of service object in destination (dry run): {src_obj.name}"
+            )
+            continue
+
+        if create_report:
+            with open("result.csv", "a") as f:
+                f.write(f"Service,{src_obj.name},{src_obj.folder}\n")
+
         try:
             create_params = build_create_params(src_obj, folder)
         except ValueError as ve:
@@ -345,10 +353,11 @@ def services(
             NameNotUniqueError,
             ObjectNotPresentError,
         ) as e:
-            error_objects.append([src_obj.name, str(e)])
+            error_type = type(e).__name__
+            error_objects.append([src_obj.name, error_type])
             continue
-        except Exception as e:
-            error_objects.append([src_obj.name, str(e)])
+        except Exception:  # noqa
+            error_objects.append([src_obj.name, "unknown error"])
             continue
 
     # Display results if not quiet_mode
@@ -356,49 +365,12 @@ def services(
         typer.echo("\nSuccessfully created the following service objects:")
         created_table = []
         for obj in created_objs:
-            if obj.protocol.tcp:
-                protocol_type = "TCP"
-                port_value = obj.protocol.tcp.port
-                timeout = (
-                    obj.protocol.tcp.override.timeout
-                    if obj.protocol.tcp.override
-                    else None
-                )
-            elif obj.protocol.udp:
-                protocol_type = "UDP"
-                port_value = obj.protocol.udp.port
-                timeout = (
-                    obj.protocol.udp.override.timeout
-                    if obj.protocol.udp.override
-                    else None
-                )
-            else:
-                protocol_type = "Unknown"
-                port_value = "N/A"
-                timeout = None
-
-            created_table.append(
-                [
-                    obj.name,
-                    obj.folder,
-                    protocol_type,
-                    port_value,
-                    timeout or "Default",
-                    obj.description or "",
-                ]
-            )
+            created_table.append([obj.name])
 
         typer.echo(
             tabulate(
                 created_table,
-                headers=[
-                    "Name",
-                    "Folder",
-                    "Protocol",
-                    "Ports",
-                    "Timeout",
-                    "Description",
-                ],
+                headers=["Name"],
                 tablefmt="fancy_grid",
             )
         )

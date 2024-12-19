@@ -1,3 +1,5 @@
+# scm_config_clone/commands/objects/tag.py
+
 import logging
 from typing import List, Optional, Any, Dict
 
@@ -14,7 +16,11 @@ from scm.exceptions import (
 from scm.models.objects.tag import TagCreateModel, TagResponseModel
 from tabulate import tabulate
 
-from scm_config_clone.utilities import load_settings, parse_csv_option
+from scm_config_clone.utilities import (
+    compare_object_lists,
+    load_settings,
+    parse_csv_option,
+)
 
 
 def build_create_params(src_obj: TagResponseModel, folder: str) -> Dict[str, Any]:
@@ -174,7 +180,7 @@ def tags(
     exclude_snippets_list = parse_csv_option(exclude_snippets)
     exclude_devices_list = parse_csv_option(exclude_devices)
 
-    # Authenticate and retrieve from source
+    # Authenticate with source
     try:
         source_creds = settings["source_scm"]
         source_client = Scm(
@@ -191,65 +197,17 @@ def tags(
         logger.error(f"Unexpected error with source authentication: {e}")
         raise typer.Exit(code=1)
 
-    # Retrieve tag objects from source
+    # Authenticate with destination
     try:
-        source_tags = Tag(source_client, max_limit=5000)
-        tag_objects = source_tags.list(
-            folder=folder,
-            exact_match=True,
-            exclude_folders=exclude_folders_list,
-            exclude_snippets=exclude_snippets_list,
-            exclude_devices=exclude_devices_list,
-        )
-        logger.info(
-            f"Retrieved {len(tag_objects)} tag objects from source tenant folder '{folder}'."
-        )
-    except Exception as e:
-        logger.error(f"Error retrieving tag objects from source: {e}")
-        raise typer.Exit(code=1)
-
-    # Display retrieved tags if not quiet_mode
-    if tag_objects and not quiet_mode:
-        tag_table = [
-            [
-                t.name,
-                t.folder,
-                t.comments or "",
-                t.snippet or "",
-                t.device or "",
-            ]
-            for t in tag_objects
-        ]
-        typer.echo(
-            tabulate(
-                tag_table,
-                headers=["Name", "Folder", "Description", "Snippet", "Device"],
-                tablefmt="fancy_grid",
-            )
-        )
-    elif not tag_objects:
-        typer.echo("No tag objects found in the source folder.")
-
-    # Prompt if not auto-approved and objects exist
-    if tag_objects and not auto_approve:
-        proceed = typer.confirm(
-            "Do you want to proceed with creating these objects in the destination tenant?"
-        )
-        if not proceed:
-            typer.echo("Aborting cloning operation.")
-            raise typer.Exit(code=0)
-
-    # Authenticate with destination tenant
-    try:
-        dest_creds = settings["destination_scm"]
+        destination_creds = settings["destination_scm"]
         destination_client = Scm(
-            client_id=dest_creds["client_id"],
-            client_secret=dest_creds["client_secret"],
-            tsg_id=dest_creds["tenant"],
+            client_id=destination_creds["client_id"],
+            client_secret=destination_creds["client_secret"],
+            tsg_id=destination_creds["tenant"],
             log_level=logging_level,
         )
         logger.info(
-            f"Authenticated with destination SCM tenant: {dest_creds['tenant']}"
+            f"Authenticated with destination SCM tenant: {destination_creds['tenant']}"
         )
     except (AuthenticationError, KeyError) as e:
         logger.error(f"Error authenticating with destination tenant: {e}")
@@ -258,19 +216,101 @@ def tags(
         logger.error(f"Unexpected error with destination authentication: {e}")
         raise typer.Exit(code=1)
 
+    # Retrieve tag objects from source
+    try:
+        source_tags = Tag(source_client, max_limit=5000)
+        source_objects = source_tags.list(
+            folder=folder,
+            exact_match=True,
+            exclude_folders=exclude_folders_list,
+            exclude_snippets=exclude_snippets_list,
+            exclude_devices=exclude_devices_list,
+        )
+        logger.info(
+            f"Retrieved {len(source_objects)} tag objects from source tenant folder '{folder}'."
+        )
+    except Exception as e:
+        logger.error(f"Error retrieving tag objects from source: {e}")
+        raise typer.Exit(code=1)
+
+    # Retrieve tag objects from destination
+    try:
+        destination_tags = Tag(destination_client, max_limit=5000)
+        destination_objects = destination_tags.list(
+            folder=folder,
+            exact_match=True,
+            exclude_folders=exclude_folders_list,
+            exclude_snippets=exclude_snippets_list,
+            exclude_devices=exclude_devices_list,
+        )
+        logger.info(
+            f"Retrieved {len(destination_objects)} tag objects from destination tenant folder '{folder}'."
+        )
+    except Exception as e:
+        logger.error(f"Error retrieving tag objects from destination: {e}")
+        raise typer.Exit(code=1)
+
+    # Compare and get the status information
+    comparison_results = compare_object_lists(
+        source_objects,
+        destination_objects,
+    )
+
+    if source_objects and not quiet_mode:
+        tag_table = []
+        for result in comparison_results:
+            # 'x' if already configured else ''
+            status = "x" if result["already_configured"] else ""
+            tag_table.append([result["name"], status])
+
+        typer.echo(
+            tabulate(
+                tag_table,
+                headers=["Name", "Destination Status"],
+                tablefmt="fancy_grid",
+            )
+        )
+
+    # Prompt if not auto-approved and objects exist
+    if source_objects and not auto_approve:
+        proceed = typer.confirm(
+            "Do you want to proceed with creating these objects in the destination tenant?"
+        )
+        if not proceed:
+            typer.echo("Aborting cloning operation.")
+            raise typer.Exit(code=0)
+
+    # Determine which objects need to be created (those not already configured)
+    already_configured_names = {
+        res["name"] for res in comparison_results if res["already_configured"]
+    }
+
+    objects_to_create = [
+        obj for obj in source_objects if obj.name not in already_configured_names
+    ]
+
     # Create tag objects in destination
     destination_tags = Tag(destination_client, max_limit=5000)
     created_objs: List[TagResponseModel] = []
     error_objects: List[List[str]] = []
 
-    for src_obj in tag_objects:
+    for src_obj in objects_to_create:
+        if dry_run:
+            logger.info(
+                f"Skipping creation of tag object in destination (dry run): {src_obj.name}"
+            )
+            continue
+
+        if create_report:
+            with open("result.csv", "a") as f:
+                f.write(f"Tag,{src_obj.name},{src_obj.folder}\n")
+
         try:
             create_params = build_create_params(src_obj, folder)
         except ValueError as ve:
             error_objects.append([src_obj.name, str(ve)])
             continue
 
-        # If dry_run is True, we might skip actual creation in the future.
         try:
             new_obj = destination_tags.create(create_params)
             created_objs.append(new_obj)
@@ -281,30 +321,24 @@ def tags(
             NameNotUniqueError,
             ObjectNotPresentError,
         ) as e:
-            error_objects.append([src_obj.name, str(e)])
+            error_type = type(e).__name__
+            error_objects.append([src_obj.name, error_type])
             continue
-        except Exception as e:
-            error_objects.append([src_obj.name, str(e)])
+        except Exception:  # noqa
+            error_objects.append([src_obj.name, "unknown error"])
             continue
 
     # Display results if not quiet_mode
     if created_objs and not quiet_mode:
         typer.echo("\nSuccessfully created the following tag objects:")
-        created_table = [
-            [
-                obj.name,
-                obj.folder,
-                obj.comments or "",
-                obj.snippet or "",
-                obj.device or "",
-            ]
-            for obj in created_objs
-        ]
+        created_table = []
+        for obj in created_objs:
+            created_table.append([obj.name])
 
         typer.echo(
             tabulate(
                 created_table,
-                headers=["Name", "Folder", "Description", "Snippet", "Device"],
+                headers=["Name"],
                 tablefmt="fancy_grid",
             )
         )

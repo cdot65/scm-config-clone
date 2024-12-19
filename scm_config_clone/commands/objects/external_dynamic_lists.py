@@ -19,7 +19,11 @@ from scm.models.objects.external_dynamic_lists import (
 )
 from tabulate import tabulate
 
-from scm_config_clone.utilities import load_settings, parse_csv_option
+from scm_config_clone.utilities import (
+    compare_object_lists,
+    load_settings,
+    parse_csv_option,
+)
 
 
 def build_create_params(
@@ -188,7 +192,7 @@ def external_dynamic_lists(
     exclude_snippets_list = parse_csv_option(exclude_snippets)
     exclude_devices_list = parse_csv_option(exclude_devices)
 
-    # Authenticate and retrieve from source
+    # Authenticate with source
     try:
         source_creds = settings["source_scm"]
         source_client = Scm(
@@ -205,81 +209,17 @@ def external_dynamic_lists(
         logger.error(f"Unexpected error with source authentication: {e}")
         raise typer.Exit(code=1)
 
-    # Retrieve EDL objects from source
+    # Authenticate with destination
     try:
-        source_edls = ExternalDynamicLists(source_client, max_limit=5000)
-        edl_objects = source_edls.list(
-            folder=folder,
-            exact_match=True,
-            exclude_folders=exclude_folders_list,
-            exclude_snippets=exclude_snippets_list,
-            exclude_devices=exclude_devices_list,
-        )
-        logger.info(
-            f"Retrieved {len(edl_objects)} EDL objects from source tenant folder '{folder}'."
-        )
-    except Exception as e:
-        logger.error(f"Error retrieving EDL objects from source: {e}")
-        raise typer.Exit(code=1)
-
-    # Display retrieved EDLs if not quiet_mode
-    if edl_objects and not quiet_mode:
-        edl_table = []
-        for edl in edl_objects:
-            edl_type = (
-                next(iter(edl.type.model_dump().keys())) if edl.type else "Unknown"
-            )
-            edl_url = (
-                getattr(getattr(edl.type, edl_type), "url", "N/A")
-                if edl.type
-                else "N/A"
-            )
-            edl_description = (
-                getattr(getattr(edl.type, edl_type), "description", "")
-                if edl.type
-                else ""
-            )
-
-            edl_table.append(
-                [
-                    edl.name,
-                    edl.folder,
-                    edl_type,
-                    edl_url,
-                    edl_description or "",
-                ]
-            )
-
-        typer.echo(
-            tabulate(
-                edl_table,
-                headers=["Name", "Folder", "Type", "URL", "Description"],
-                tablefmt="fancy_grid",
-            )
-        )
-    elif not edl_objects:
-        typer.echo("No EDL objects found in the source folder.")
-
-    # Prompt if not auto-approved and objects exist
-    if edl_objects and not auto_approve:
-        proceed = typer.confirm(
-            "Do you want to proceed with creating these objects in the destination tenant?"
-        )
-        if not proceed:
-            typer.echo("Aborting cloning operation.")
-            raise typer.Exit(code=0)
-
-    # Authenticate with destination tenant
-    try:
-        dest_creds = settings["destination_scm"]
+        destination_creds = settings["destination_scm"]
         destination_client = Scm(
-            client_id=dest_creds["client_id"],
-            client_secret=dest_creds["client_secret"],
-            tsg_id=dest_creds["tenant"],
+            client_id=destination_creds["client_id"],
+            client_secret=destination_creds["client_secret"],
+            tsg_id=destination_creds["tenant"],
             log_level=logging_level,
         )
         logger.info(
-            f"Authenticated with destination SCM tenant: {dest_creds['tenant']}"
+            f"Authenticated with destination SCM tenant: {destination_creds['tenant']}"
         )
     except (AuthenticationError, KeyError) as e:
         logger.error(f"Error authenticating with destination tenant: {e}")
@@ -288,12 +228,95 @@ def external_dynamic_lists(
         logger.error(f"Unexpected error with destination authentication: {e}")
         raise typer.Exit(code=1)
 
+    # Retrieve EDL objects from source
+    try:
+        source_edls = ExternalDynamicLists(source_client, max_limit=5000)
+        source_objects = source_edls.list(
+            folder=folder,
+            exact_match=True,
+            exclude_folders=exclude_folders_list,
+            exclude_snippets=exclude_snippets_list,
+            exclude_devices=exclude_devices_list,
+        )
+        logger.info(
+            f"Retrieved {len(source_objects)} EDL objects from source tenant folder '{folder}'."
+        )
+    except Exception as e:
+        logger.error(f"Error retrieving EDL objects from source: {e}")
+        raise typer.Exit(code=1)
+
+    # Retrieve EDL objects from destination
+    try:
+        destination_edls = ExternalDynamicLists(destination_client, max_limit=5000)
+        destination_objects = destination_edls.list(
+            folder=folder,
+            exact_match=True,
+            exclude_folders=exclude_folders_list,
+            exclude_snippets=exclude_snippets_list,
+            exclude_devices=exclude_devices_list,
+        )
+        logger.info(
+            f"Retrieved {len(destination_objects)} EDL objects from destination tenant folder '{folder}'."
+        )
+    except Exception as e:
+        logger.error(f"Error retrieving EDL objects from destination: {e}")
+        raise typer.Exit(code=1)
+
+    # Compare and get the status information
+    comparison_results = compare_object_lists(
+        source_objects,
+        destination_objects,
+    )
+
+    if source_objects and not quiet_mode:
+        edl_table = []
+        for result in comparison_results:
+            # 'x' if already configured else ''
+            status = "x" if result["already_configured"] else ""
+            edl_table.append([result["name"], status])
+
+        typer.echo(
+            tabulate(
+                edl_table,
+                headers=["Name", "Destination Status"],
+                tablefmt="fancy_grid",
+            )
+        )
+
+    # Prompt if not auto-approved and objects exist
+    if source_objects and not auto_approve:
+        proceed = typer.confirm(
+            "Do you want to proceed with creating these objects in the destination tenant?"
+        )
+        if not proceed:
+            typer.echo("Aborting cloning operation.")
+            raise typer.Exit(code=0)
+
+    # Determine which objects need to be created (those not already configured)
+    already_configured_names = {
+        res["name"] for res in comparison_results if res["already_configured"]
+    }
+
+    objects_to_create = [
+        obj for obj in source_objects if obj.name not in already_configured_names
+    ]
+
     # Create EDL objects in destination
     destination_edls = ExternalDynamicLists(destination_client, max_limit=5000)
     created_objs: List[ExternalDynamicListsResponseModel] = []
     error_objects: List[List[str]] = []
 
-    for src_obj in edl_objects:
+    for src_obj in objects_to_create:
+        if dry_run:
+            logger.info(
+                f"Skipping creation of EDL object in destination (dry run): {src_obj.name}"
+            )
+            continue
+
+        if create_report:
+            with open("result.csv", "a") as f:
+                f.write(f"EDL,{src_obj.name},{src_obj.folder}\n")
+
         try:
             create_params = build_create_params(src_obj, folder)
         except ValueError as ve:
@@ -310,10 +333,11 @@ def external_dynamic_lists(
             NameNotUniqueError,
             ObjectNotPresentError,
         ) as e:
-            error_objects.append([src_obj.name, str(e)])
+            error_type = type(e).__name__
+            error_objects.append([src_obj.name, error_type])
             continue
-        except Exception as e:
-            error_objects.append([src_obj.name, str(e)])
+        except Exception:  # noqa
+            error_objects.append([src_obj.name, "unknown error"])
             continue
 
     # Display results if not quiet_mode
@@ -321,34 +345,12 @@ def external_dynamic_lists(
         typer.echo("\nSuccessfully created the following EDL objects:")
         created_table = []
         for obj in created_objs:
-            obj_type = (
-                next(iter(obj.type.model_dump().keys())) if obj.type else "Unknown"
-            )
-            obj_url = (
-                getattr(getattr(obj.type, obj_type), "url", "N/A")
-                if obj.type
-                else "N/A"
-            )
-            obj_description = (
-                getattr(getattr(obj.type, obj_type), "description", "")
-                if obj.type
-                else ""
-            )
-
-            created_table.append(
-                [
-                    obj.name,
-                    obj.folder,
-                    obj_type,
-                    obj_url,
-                    obj_description or "",
-                ]
-            )
+            created_table.append([obj.name])
 
         typer.echo(
             tabulate(
                 created_table,
-                headers=["Name", "Folder", "Type", "URL", "Description"],
+                headers=["Name"],
                 tablefmt="fancy_grid",
             )
         )
