@@ -85,6 +85,7 @@ available commands and their primary purposes.
 | application-filters    | Clone application filters               |
 | application-groups     | Clone application groups                |
 | edls                   | Clone external dynamic lists            |
+| hip-objects            | Clone HIP objects                       |
 | services               | Clone services                          |
 | service-groups         | Clone service groups                    |
 | tags                   | Clone tag objects                       |
