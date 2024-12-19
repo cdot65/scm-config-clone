@@ -19,7 +19,11 @@ from scm.models.objects.address_group import (
 )
 from tabulate import tabulate
 
-from scm_config_clone.utilities import load_settings, parse_csv_option
+from scm_config_clone.utilities import (
+    compare_object_lists,
+    load_settings,
+    parse_csv_option,
+)
 
 
 def build_create_params(
@@ -194,7 +198,7 @@ def address_groups(
     exclude_snippets_list = parse_csv_option(exclude_snippets)
     exclude_devices_list = parse_csv_option(exclude_devices)
 
-    # Authenticate and retrieve from source
+    # Authenticate with source
     try:
         source_creds = settings["source_scm"]
         source_client = Scm(
@@ -211,77 +215,17 @@ def address_groups(
         logger.error(f"Unexpected error with source authentication: {e}")
         raise typer.Exit(code=1)
 
-    # Retrieve address group objects from source
+    # Authenticate with destination
     try:
-        source_address_groups = AddressGroup(source_client, max_limit=5000)
-        address_group_objects = source_address_groups.list(
-            folder=folder,
-            exact_match=True,
-            exclude_folders=exclude_folders_list,
-            exclude_snippets=exclude_snippets_list,
-            exclude_devices=exclude_devices_list,
-        )
-        logger.info(
-            f"Retrieved {len(address_group_objects)} address group objects from source tenant folder '{folder}'."
-        )
-    except Exception as e:
-        logger.error(f"Error retrieving address group objects from source: {e}")
-        raise typer.Exit(code=1)
-
-    # Display retrieved groups if not quiet_mode
-    if address_group_objects and not quiet_mode:
-        group_table = []
-        for group in address_group_objects:
-            if group.static:
-                group_type = "Static"
-                group_value = ", ".join(group.static)
-            elif group.dynamic:
-                group_type = "Dynamic"
-                group_value = group.dynamic.filter
-            else:
-                group_type = "Unknown"
-                group_value = "N/A"
-
-            group_table.append(
-                [
-                    group.name,
-                    group.folder,
-                    group_type,
-                    group_value,
-                    group.description or "",
-                ]
-            )
-
-        typer.echo(
-            tabulate(
-                group_table,
-                headers=["Name", "Folder", "Type", "Value", "Description"],
-                tablefmt="fancy_grid",
-            )
-        )
-    elif not address_group_objects:
-        typer.echo("No address group objects found in the source folder.")
-
-    # Prompt if not auto-approved and objects exist
-    if address_group_objects and not auto_approve:
-        proceed = typer.confirm(
-            "Do you want to proceed with creating these objects in the destination tenant?"
-        )
-        if not proceed:
-            typer.echo("Aborting cloning operation.")
-            raise typer.Exit(code=0)
-
-    # Authenticate with destination tenant
-    try:
-        dest_creds = settings["destination_scm"]
+        destination_creds = settings["destination_scm"]
         destination_client = Scm(
-            client_id=dest_creds["client_id"],
-            client_secret=dest_creds["client_secret"],
-            tsg_id=dest_creds["tenant"],
+            client_id=destination_creds["client_id"],
+            client_secret=destination_creds["client_secret"],
+            tsg_id=destination_creds["tenant"],
             log_level=logging_level,
         )
         logger.info(
-            f"Authenticated with destination SCM tenant: {dest_creds['tenant']}"
+            f"Authenticated with destination SCM tenant: {destination_creds['tenant']}"
         )
     except (AuthenticationError, KeyError) as e:
         logger.error(f"Error authenticating with destination tenant: {e}")
@@ -290,12 +234,95 @@ def address_groups(
         logger.error(f"Unexpected error with destination authentication: {e}")
         raise typer.Exit(code=1)
 
+    # Retrieve address group objects from source
+    try:
+        source_address_groups = AddressGroup(source_client, max_limit=5000)
+        source_objects = source_address_groups.list(
+            folder=folder,
+            exact_match=True,
+            exclude_folders=exclude_folders_list,
+            exclude_snippets=exclude_snippets_list,
+            exclude_devices=exclude_devices_list,
+        )
+        logger.info(
+            f"Retrieved {len(source_objects)} address group objects from source tenant folder '{folder}'."
+        )
+    except Exception as e:
+        logger.error(f"Error retrieving address group objects from source: {e}")
+        raise typer.Exit(code=1)
+
+    # Retrieve address group objects from destination
+    try:
+        destination_address_groups = AddressGroup(destination_client, max_limit=5000)
+        destination_objects = destination_address_groups.list(
+            folder=folder,
+            exact_match=True,
+            exclude_folders=exclude_folders_list,
+            exclude_snippets=exclude_snippets_list,
+            exclude_devices=exclude_devices_list,
+        )
+        logger.info(
+            f"Retrieved {len(destination_objects)} address group objects from destination tenant folder '{folder}'."
+        )
+    except Exception as e:
+        logger.error(f"Error retrieving address group objects from destination: {e}")
+        raise typer.Exit(code=1)
+
+    # Compare and get the status information
+    comparison_results = compare_object_lists(
+        source_objects,
+        destination_objects,
+    )
+
+    if source_objects and not quiet_mode:
+        group_table = []
+        for result in comparison_results:
+            # 'x' if already configured else ''
+            status = "x" if result["already_configured"] else ""
+            group_table.append([result["name"], status])
+
+        typer.echo(
+            tabulate(
+                group_table,
+                headers=["Name", "Destination Status"],
+                tablefmt="fancy_grid",
+            )
+        )
+
+    # Prompt if not auto-approved and objects exist
+    if source_objects and not auto_approve:
+        proceed = typer.confirm(
+            "Do you want to proceed with creating these objects in the destination tenant?"
+        )
+        if not proceed:
+            typer.echo("Aborting cloning operation.")
+            raise typer.Exit(code=0)
+
+    # Determine which objects need to be created (those not already configured)
+    already_configured_names = {
+        res["name"] for res in comparison_results if res["already_configured"]
+    }
+
+    objects_to_create = [
+        obj for obj in source_objects if obj.name not in already_configured_names
+    ]
+
     # Create address group objects in destination
     destination_address_groups = AddressGroup(destination_client, max_limit=5000)
     created_objs: List[AddressGroupResponseModel] = []
     error_objects: List[List[str]] = []
 
-    for src_obj in address_group_objects:
+    for src_obj in objects_to_create:
+        if dry_run:
+            logger.info(
+                f"Skipping creation of address group object in destination (dry run): {src_obj.name}"
+            )
+            continue
+
+        if create_report:
+            with open("result.csv", "a") as f:
+                f.write(f"Address Group,{src_obj.name},{src_obj.folder}\n")
+
         try:
             create_params = build_create_params(src_obj, folder)
         except ValueError as ve:
@@ -312,10 +339,11 @@ def address_groups(
             NameNotUniqueError,
             ObjectNotPresentError,
         ) as e:
-            error_objects.append([src_obj.name, str(e)])
+            error_type = type(e).__name__
+            error_objects.append([src_obj.name, error_type])
             continue
-        except Exception as e:
-            error_objects.append([src_obj.name, str(e)])
+        except Exception:  # noqa
+            error_objects.append([src_obj.name, "unknown error"])
             continue
 
     # Display results if not quiet_mode
@@ -323,30 +351,12 @@ def address_groups(
         typer.echo("\nSuccessfully created the following address group objects:")
         created_table = []
         for obj in created_objs:
-            if obj.static:
-                group_type = "Static"
-                group_value = ", ".join(obj.static)
-            elif obj.dynamic:
-                group_type = "Dynamic"
-                group_value = obj.dynamic.filter
-            else:
-                group_type = "Unknown"
-                group_value = "N/A"
-
-            created_table.append(
-                [
-                    obj.name,
-                    obj.folder,
-                    group_type,
-                    group_value,
-                    obj.description or "",
-                ]
-            )
+            created_table.append([obj.name])
 
         typer.echo(
             tabulate(
                 created_table,
-                headers=["Name", "Folder", "Type", "Value", "Description"],
+                headers=["Name"],
                 tablefmt="fancy_grid",
             )
         )

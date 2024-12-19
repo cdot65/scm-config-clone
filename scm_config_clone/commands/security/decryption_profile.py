@@ -19,7 +19,11 @@ from scm.models.security.decryption_profiles import (
 )
 from tabulate import tabulate
 
-from scm_config_clone.utilities import load_settings, parse_csv_option
+from scm_config_clone.utilities import (
+    compare_object_lists,
+    load_settings,
+    parse_csv_option,
+)
 
 
 def build_create_params(
@@ -198,7 +202,7 @@ def decryption_profiles(
     exclude_snippets_list = parse_csv_option(exclude_snippets)
     exclude_devices_list = parse_csv_option(exclude_devices)
 
-    # Authenticate and retrieve from source
+    # Authenticate with source
     try:
         source_creds = settings["source_scm"]
         source_client = Scm(
@@ -215,84 +219,17 @@ def decryption_profiles(
         logger.error(f"Unexpected error with source authentication: {e}")
         raise typer.Exit(code=1)
 
-    # Retrieve decryption profile objects from source
+    # Authenticate with destination
     try:
-        source_profiles = DecryptionProfile(source_client, max_limit=5000)
-        profile_objects = source_profiles.list(
-            folder=folder,
-            exact_match=True,
-            exclude_folders=exclude_folders_list,
-            exclude_snippets=exclude_snippets_list,
-            exclude_devices=exclude_devices_list,
-        )
-        logger.info(
-            f"Retrieved {len(profile_objects)} decryption profile objects from source tenant folder '{folder}'."
-        )
-    except Exception as e:
-        logger.error(f"Error retrieving decryption profile objects from source: {e}")
-        raise typer.Exit(code=1)
-
-    # Display retrieved profiles if not quiet_mode
-    if profile_objects and not quiet_mode:
-        profile_table = []
-        for profile in profile_objects:
-            if profile.ssl_forward_proxy:
-                profile_type = "Forward Proxy"
-            elif profile.ssl_inbound_proxy:
-                profile_type = "Inbound Proxy"
-            elif profile.ssl_no_proxy:
-                profile_type = "No Proxy"
-            else:
-                profile_type = "Unknown"
-
-            ssl_settings = []
-            if profile.ssl_protocol_settings:
-                ssl_settings.extend(
-                    [
-                        f"Min: {profile.ssl_protocol_settings.min_version}",
-                        f"Max: {profile.ssl_protocol_settings.max_version}",
-                    ]
-                )
-
-            profile_table.append(
-                [
-                    profile.name,
-                    profile.folder,
-                    profile_type,
-                    ", ".join(ssl_settings) if ssl_settings else "Default Settings",
-                ]
-            )
-
-        typer.echo(
-            tabulate(
-                profile_table,
-                headers=["Name", "Folder", "Type", "SSL Settings"],
-                tablefmt="fancy_grid",
-            )
-        )
-    elif not profile_objects:
-        typer.echo("No decryption profile objects found in the source folder.")
-
-    # Prompt if not auto-approved and objects exist
-    if profile_objects and not auto_approve:
-        proceed = typer.confirm(
-            "Do you want to proceed with creating these objects in the destination tenant?"
-        )
-        if not proceed:
-            typer.echo("Aborting cloning operation.")
-            raise typer.Exit(code=0)
-
-    # Authenticate with destination tenant
-    try:
-        dest_creds = settings["destination_scm"]
+        destination_creds = settings["destination_scm"]
         destination_client = Scm(
-            client_id=dest_creds["client_id"],
-            client_secret=dest_creds["client_secret"],
-            tsg_id=dest_creds["tenant"],
+            client_id=destination_creds["client_id"],
+            client_secret=destination_creds["client_secret"],
+            tsg_id=destination_creds["tenant"],
             log_level=logging_level,
         )
         logger.info(
-            f"Authenticated with destination SCM tenant: {dest_creds['tenant']}"
+            f"Authenticated with destination SCM tenant: {destination_creds['tenant']}"
         )
     except (AuthenticationError, KeyError) as e:
         logger.error(f"Error authenticating with destination tenant: {e}")
@@ -301,12 +238,97 @@ def decryption_profiles(
         logger.error(f"Unexpected error with destination authentication: {e}")
         raise typer.Exit(code=1)
 
+    # Retrieve decryption profile objects from source
+    try:
+        source_profiles = DecryptionProfile(source_client, max_limit=5000)
+        source_objects = source_profiles.list(
+            folder=folder,
+            exact_match=True,
+            exclude_folders=exclude_folders_list,
+            exclude_snippets=exclude_snippets_list,
+            exclude_devices=exclude_devices_list,
+        )
+        logger.info(
+            f"Retrieved {len(source_objects)} decryption profile objects from source tenant folder '{folder}'."
+        )
+    except Exception as e:
+        logger.error(f"Error retrieving decryption profile objects from source: {e}")
+        raise typer.Exit(code=1)
+
+    # Retrieve decryption profile objects from destination
+    try:
+        destination_profiles = DecryptionProfile(destination_client, max_limit=5000)
+        destination_objects = destination_profiles.list(
+            folder=folder,
+            exact_match=True,
+            exclude_folders=exclude_folders_list,
+            exclude_snippets=exclude_snippets_list,
+            exclude_devices=exclude_devices_list,
+        )
+        logger.info(
+            f"Retrieved {len(destination_objects)} decryption profile objects from destination tenant folder '{folder}'."
+        )
+    except Exception as e:
+        logger.error(
+            f"Error retrieving decryption profile objects from destination: {e}"
+        )
+        raise typer.Exit(code=1)
+
+    # Compare and get the status information
+    comparison_results = compare_object_lists(
+        source_objects,
+        destination_objects,
+    )
+
+    if source_objects and not quiet_mode:
+        profile_table = []
+        for result in comparison_results:
+            # 'x' if already configured else ''
+            status = "x" if result["already_configured"] else ""
+            profile_table.append([result["name"], status])
+
+        typer.echo(
+            tabulate(
+                profile_table,
+                headers=["Name", "Destination Status"],
+                tablefmt="fancy_grid",
+            )
+        )
+
+    # Prompt if not auto-approved and objects exist
+    if source_objects and not auto_approve:
+        proceed = typer.confirm(
+            "Do you want to proceed with creating these objects in the destination tenant?"
+        )
+        if not proceed:
+            typer.echo("Aborting cloning operation.")
+            raise typer.Exit(code=0)
+
+    # Determine which objects need to be created (those not already configured)
+    already_configured_names = {
+        res["name"] for res in comparison_results if res["already_configured"]
+    }
+
+    objects_to_create = [
+        obj for obj in source_objects if obj.name not in already_configured_names
+    ]
+
     # Create decryption profile objects in destination
     destination_profiles = DecryptionProfile(destination_client, max_limit=5000)
     created_objs: List[DecryptionProfileResponseModel] = []
     error_objects: List[List[str]] = []
 
-    for src_obj in profile_objects:
+    for src_obj in objects_to_create:
+        if dry_run:
+            logger.info(
+                f"Skipping creation of decryption profile object in destination (dry run): {src_obj.name}"
+            )
+            continue
+
+        if create_report:
+            with open("result.csv", "a") as f:
+                f.write(f"Decryption Profile,{src_obj.name},{src_obj.folder}\n")
+
         try:
             create_params = build_create_params(src_obj, folder)
         except ValueError as ve:
@@ -325,10 +347,11 @@ def decryption_profiles(
             NameNotUniqueError,
             ObjectNotPresentError,
         ) as e:
-            error_objects.append([src_obj.name, str(e)])
+            error_type = type(e).__name__
+            error_objects.append([src_obj.name, error_type])
             continue
-        except Exception as e:
-            error_objects.append([src_obj.name, str(e)])
+        except Exception:  # noqa
+            error_objects.append([src_obj.name, "unknown error"])
             continue
 
     # Display results if not quiet_mode
@@ -336,37 +359,12 @@ def decryption_profiles(
         typer.echo("\nSuccessfully created the following decryption profile objects:")
         created_table = []
         for obj in created_objs:
-            if obj.ssl_forward_proxy:
-                profile_type = "Forward Proxy"
-            elif obj.ssl_inbound_proxy:
-                profile_type = "Inbound Proxy"
-            elif obj.ssl_no_proxy:
-                profile_type = "No Proxy"
-            else:
-                profile_type = "Unknown"
-
-            ssl_settings = []
-            if obj.ssl_protocol_settings:
-                ssl_settings.extend(
-                    [
-                        f"Min: {obj.ssl_protocol_settings.min_version}",
-                        f"Max: {obj.ssl_protocol_settings.max_version}",
-                    ]
-                )
-
-            created_table.append(
-                [
-                    obj.name,
-                    obj.folder,
-                    profile_type,
-                    ", ".join(ssl_settings) if ssl_settings else "Default Settings",
-                ]
-            )
+            created_table.append([obj.name])
 
         typer.echo(
             tabulate(
                 created_table,
-                headers=["Name", "Folder", "Type", "SSL Settings"],
+                headers=["Name"],
                 tablefmt="fancy_grid",
             )
         )

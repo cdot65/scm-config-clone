@@ -19,7 +19,11 @@ from scm.models.objects.application_filters import (
 )
 from tabulate import tabulate
 
-from scm_config_clone.utilities import load_settings, parse_csv_option
+from scm_config_clone.utilities import (
+    compare_object_lists,
+    load_settings,
+    parse_csv_option,
+)
 
 
 def build_create_params(
@@ -188,7 +192,7 @@ def application_filters(
     exclude_folders_list = parse_csv_option(exclude_folders)
     exclude_snippets_list = parse_csv_option(exclude_snippets)
 
-    # Authenticate and retrieve from source
+    # Authenticate with source
     try:
         source_creds = settings["source_scm"]
         source_client = Scm(
@@ -205,70 +209,17 @@ def application_filters(
         logger.error(f"Unexpected error with source authentication: {e}")
         raise typer.Exit(code=1)
 
-    # Retrieve application filter objects from source
+    # Authenticate with destination
     try:
-        source_app_filters = ApplicationFilters(source_client, max_limit=5000)
-        app_filter_objects = source_app_filters.list(
-            folder=folder,
-            exact_match=True,
-            exclude_folders=exclude_folders_list,
-            exclude_snippets=exclude_snippets_list,
-        )
-        logger.info(
-            f"Retrieved {len(app_filter_objects)} application filter objects from source tenant folder '{folder}'."
-        )
-    except Exception as e:
-        logger.error(f"Error retrieving application filter objects from source: {e}")
-        raise typer.Exit(code=1)
-
-    # Display retrieved filters if not quiet_mode
-    if app_filter_objects and not quiet_mode:
-        filter_table = []
-        for app_filter in app_filter_objects:
-            filter_table.append(
-                [
-                    app_filter.name,
-                    app_filter.folder,
-                    ", ".join(app_filter.category) if app_filter.category else "",
-                    (
-                        ", ".join(str(r) for r in app_filter.risk)
-                        if app_filter.risk
-                        else ""
-                    ),
-                    app_filter.is_saas,
-                ]
-            )
-
-        typer.echo(
-            tabulate(
-                filter_table,
-                headers=["Name", "Folder", "Categories", "Risk Levels", "SaaS"],
-                tablefmt="fancy_grid",
-            )
-        )
-    elif not app_filter_objects:
-        typer.echo("No application filter objects found in the source folder.")
-
-    # Prompt if not auto-approved and objects exist
-    if app_filter_objects and not auto_approve:
-        proceed = typer.confirm(
-            "Do you want to proceed with creating these objects in the destination tenant?"
-        )
-        if not proceed:
-            typer.echo("Aborting cloning operation.")
-            raise typer.Exit(code=0)
-
-    # Authenticate with destination tenant
-    try:
-        dest_creds = settings["destination_scm"]
+        destination_creds = settings["destination_scm"]
         destination_client = Scm(
-            client_id=dest_creds["client_id"],
-            client_secret=dest_creds["client_secret"],
-            tsg_id=dest_creds["tenant"],
+            client_id=destination_creds["client_id"],
+            client_secret=destination_creds["client_secret"],
+            tsg_id=destination_creds["tenant"],
             log_level=logging_level,
         )
         logger.info(
-            f"Authenticated with destination SCM tenant: {dest_creds['tenant']}"
+            f"Authenticated with destination SCM tenant: {destination_creds['tenant']}"
         )
     except (AuthenticationError, KeyError) as e:
         logger.error(f"Error authenticating with destination tenant: {e}")
@@ -277,12 +228,95 @@ def application_filters(
         logger.error(f"Unexpected error with destination authentication: {e}")
         raise typer.Exit(code=1)
 
+    # Retrieve application filter objects from source
+    try:
+        source_app_filters = ApplicationFilters(source_client, max_limit=5000)
+        source_objects = source_app_filters.list(
+            folder=folder,
+            exact_match=True,
+            exclude_folders=exclude_folders_list,
+            exclude_snippets=exclude_snippets_list,
+        )
+        logger.info(
+            f"Retrieved {len(source_objects)} application filter objects from source tenant folder '{folder}'."
+        )
+    except Exception as e:
+        logger.error(f"Error retrieving application filter objects from source: {e}")
+        raise typer.Exit(code=1)
+
+    # Retrieve application filter objects from destination
+    try:
+        destination_app_filters = ApplicationFilters(destination_client, max_limit=5000)
+        destination_objects = destination_app_filters.list(
+            folder=folder,
+            exact_match=True,
+            exclude_folders=exclude_folders_list,
+            exclude_snippets=exclude_snippets_list,
+        )
+        logger.info(
+            f"Retrieved {len(destination_objects)} application filter objects from destination tenant folder '{folder}'."
+        )
+    except Exception as e:
+        logger.error(
+            f"Error retrieving application filter objects from destination: {e}"
+        )
+        raise typer.Exit(code=1)
+
+    # Compare and get the status information
+    comparison_results = compare_object_lists(
+        source_objects,
+        destination_objects,
+    )
+
+    if source_objects and not quiet_mode:
+        filter_table = []
+        for result in comparison_results:
+            # 'x' if already configured else ''
+            status = "x" if result["already_configured"] else ""
+            filter_table.append([result["name"], status])
+
+        typer.echo(
+            tabulate(
+                filter_table,
+                headers=["Name", "Destination Status"],
+                tablefmt="fancy_grid",
+            )
+        )
+
+    # Prompt if not auto-approved and objects exist
+    if source_objects and not auto_approve:
+        proceed = typer.confirm(
+            "Do you want to proceed with creating these objects in the destination tenant?"
+        )
+        if not proceed:
+            typer.echo("Aborting cloning operation.")
+            raise typer.Exit(code=0)
+
+    # Determine which objects need to be created (those not already configured)
+    already_configured_names = {
+        res["name"] for res in comparison_results if res["already_configured"]
+    }
+
+    objects_to_create = [
+        obj for obj in source_objects if obj.name not in already_configured_names
+    ]
+
     # Create application filter objects in destination
     destination_app_filters = ApplicationFilters(destination_client, max_limit=5000)
     created_objs: List[ApplicationFiltersResponseModel] = []
     error_objects: List[List[str]] = []
 
-    for src_obj in app_filter_objects:
+    for src_obj in objects_to_create:
+        if dry_run:
+            logger.info(
+                f"Skipping creation of application filter object in destination (dry run): {src_obj.name}"
+            )
+            continue
+
+        if create_report:
+            with open("result.csv", "a") as f:
+                f.write(f"Application Filter,{src_obj.name},{src_obj.folder}\n")
+
         try:
             create_params = build_create_params(src_obj, folder)
         except ValueError as ve:
@@ -301,10 +335,11 @@ def application_filters(
             NameNotUniqueError,
             ObjectNotPresentError,
         ) as e:
-            error_objects.append([src_obj.name, str(e)])
+            error_type = type(e).__name__
+            error_objects.append([src_obj.name, error_type])
             continue
-        except Exception as e:
-            error_objects.append([src_obj.name, str(e)])
+        except Exception:  # noqa
+            error_objects.append([src_obj.name, "unknown error"])
             continue
 
     # Display results if not quiet_mode
@@ -312,20 +347,12 @@ def application_filters(
         typer.echo("\nSuccessfully created the following application filter objects:")
         created_table = []
         for obj in created_objs:
-            created_table.append(
-                [
-                    obj.name,
-                    obj.folder,
-                    ", ".join(obj.category) if obj.category else "",
-                    ", ".join(str(r) for r in obj.risk) if obj.risk else "",
-                    obj.is_saas,
-                ]
-            )
+            created_table.append([obj.name])
 
         typer.echo(
             tabulate(
                 created_table,
-                headers=["Name", "Folder", "Categories", "Risk Levels", "SaaS"],
+                headers=["Name"],
                 tablefmt="fancy_grid",
             )
         )
