@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "scm-config-clone"
-version = "0.2.2"
+version = "0.2.4"
 description = "A command-line tool to clone configuration objects between Palo Alto Networks Strata Cloud Manager (SCM) tenants."
 authors = ["Calvin Remsburg <calvin@cdot.io>"]
 license = "Apache 2.0"
@@ -8,10 +8,9 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-dynaconf = "^3.2.6"
-typer = "^0.12.5"
+typer = "^0.15.1"
 setuptools = "^75.1.0"
-pan-scm-sdk = "^0.3.4"
+pan-scm-sdk = "^0.3.7"
 tabulate = "^0.9.0"
 pandas = "^2.2.3"
 pyyaml = "^6.0.2"
