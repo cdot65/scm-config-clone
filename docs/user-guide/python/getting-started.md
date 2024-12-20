@@ -54,7 +54,7 @@ address objects:
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone addresses --folder "Texas"
+scm-clone addresses --source-folder "Texas"
 ```
 </div>
 
@@ -69,7 +69,7 @@ If you decide you want to run in dry-run mode or commit changes after creation, 
   <div class="termy">
   <!-- termynal -->
   ```bash
-  scm-clone addresses --folder "Texas" -D
+  scm-clone addresses --source-folder "Texas" -D
   ```
   </div>
 
@@ -78,7 +78,7 @@ If you decide you want to run in dry-run mode or commit changes after creation, 
   <div class="termy">
   <!-- termynal -->
   ```bash
-  scm-clone addresses --folder "Texas" --commit-and-push
+  scm-clone addresses --source-folder "Texas" --commit-and-push
   ```
   </div>
 
@@ -86,9 +86,9 @@ If you decide you want to run in dry-run mode or commit changes after creation, 
 
 Just like addresses, you can clone:
 
-- Tag objects: `scm-clone tags --folder "Texas"`
-- Services: `scm-clone services --folder "Texas"`
-- Security rules: `scm-clone security-rules --folder "cdot65"`
+- Tag objects: `scm-clone tags --source-folder "Texas"`
+- Services: `scm-clone services --source-folder "Texas"`
+- Security rules: `scm-clone security-rules --source-folder "cdot65"`
 
 Each command respects the defaults in `settings.yaml`, and you can override them at runtime with flags like `-A` for
 auto-approve or `-Q` for quiet mode.

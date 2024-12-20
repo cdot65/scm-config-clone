@@ -28,19 +28,20 @@ If needed, you can override any setting at runtime using the provided flags.
 All commands share a common set of flags that interact with the defaults defined in `settings.yaml`. At runtime, if a
 flag is not provided, the CLI falls back on the values from `settings.yaml`.
 
-| Flag/Option           | Description                                                                                     | Default from YAML |
-|-----------------------|-------------------------------------------------------------------------------------------------|-------------------|
-| `--folder`            | Folder to focus on when retrieving and cloning objects. If omitted, the CLI will prompt for it. | None              |
-| `--exclude-folders`   | Comma-separated folders to exclude from retrieval.                                              | None              |
-| `--exclude-snippets`  | Comma-separated snippets to exclude from retrieval.                                             | None              |
-| `--exclude-devices`   | Comma-separated devices to exclude from retrieval.                                              | None              |
-| `--commit-and-push`   | Commit changes in the destination tenant after creation if objects are successfully cloned.     | False             |
-| `--auto-approve, -A`  | If set or in `settings.yaml`, skip confirmation prompts before creating objects.                | From settings     |
-| `--create-report, -R` | If set or in `settings.yaml`, append results to `result.csv` after completion.                  | From settings     |
-| `--dry-run, -D`       | If set or in `settings.yaml`, simulate operations without applying changes.                     | From settings     |
-| `--quiet-mode, -Q`    | If set or in `settings.yaml`, suppress console output except log messages.                      | From settings     |
-| `--logging-level, -L` | Override the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL).                             | From settings     |
-| `--settings-file, -s` | Specify a custom `settings.yaml` file path.                                                     | `settings.yaml`   |
+| Flag/Option            | Description                                                                                     | Default from YAML |
+|------------------------|-------------------------------------------------------------------------------------------------|-------------------|
+| `--source-folder`      | Folder to focus on when retrieving and cloning objects. If omitted, the CLI will prompt for it. | None              |
+| `--destination-folder` | Folder to create objects in the destination tenant. If omitted, the CLI will prompt for it.     | None              |
+| `--exclude-folders`    | Comma-separated folders to exclude from retrieval.                                              | None              |
+| `--exclude-snippets`   | Comma-separated snippets to exclude from retrieval.                                             | None              |
+| `--exclude-devices`    | Comma-separated devices to exclude from retrieval.                                              | None              |
+| `--commit-and-push`    | Commit changes in the destination tenant after creation if objects are successfully cloned.     | False             |
+| `--auto-approve, -A`   | If set or in `settings.yaml`, skip confirmation prompts before creating objects.                | From settings     |
+| `--create-report, -R`  | If set or in `settings.yaml`, append results to `result.csv` after completion.                  | From settings     |
+| `--dry-run, -D`        | If set or in `settings.yaml`, simulate operations without applying changes.                     | From settings     |
+| `--quiet-mode, -Q`     | If set or in `settings.yaml`, suppress console output except log messages.                      | From settings     |
+| `--logging-level, -L`  | Override the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL).                             | From settings     |
+| `--settings-file, -s`  | Specify a custom `settings.yaml` file path.                                                     | `settings.yaml`   |
 
 ## Initial Setup (Creating the Settings File)
 
@@ -72,7 +73,7 @@ folder.
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone addresses --folder "Texas"
+scm-clone addresses --source-folder "Texas"
 ```
 </div>
 
@@ -84,7 +85,7 @@ is `false`, you'll see a table of retrieved addresses and, after creation, a tab
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone addresses --folder "Texas" -D
+scm-clone addresses --source-folder "Texas" -D
 ```
 </div>
 
@@ -95,7 +96,7 @@ This simulates the process without applying changes.
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone addresses --folder "Texas" --exclude-folders "All,Default" --exclude-snippets "predefined" -A --commit-and-push
+scm-clone addresses --source-folder "Texas" --exclude-folders "All,Default" --exclude-snippets "predefined" -A --commit-and-push
 ```
 </div>
 
@@ -109,7 +110,7 @@ For tags, assume we have a similar workflow. Just specify the folder and any fil
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone tags --folder "Texas" --exclude-devices "DeviceA" -A
+scm-clone tags --source-folder "Texas" --exclude-devices "DeviceA" -A
 ```
 </div>
 
@@ -121,7 +122,7 @@ If you want a dry-run scenario for tags:
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone tags --folder "Texas" -D
+scm-clone tags --source-folder "Texas" -D
 ```
 </div>
 
@@ -135,7 +136,7 @@ console clutter:
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone services --folder "Texas" --exclude-snippets "legacy-snippet" -Q
+scm-clone services --source-folder "Texas" --exclude-snippets "legacy-snippet" -Q
 ```
 </div>
 
@@ -147,7 +148,7 @@ To commit changes after cloning services:
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone services --folder "Texas" --commit-and-push
+scm-clone services --source-folder "Texas" --commit-and-push
 ```
 </div>
 
@@ -159,7 +160,7 @@ folder `cdot65` in the `pre` rulebase, and you'd like a prompt before proceeding
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone security-rules --folder "cdot65" --rulebase "pre"
+scm-clone security-rules --source-folder "cdot65" --rulebase "pre"
 ```
 </div>
 
@@ -168,7 +169,7 @@ If you want to exclude certain devices or snippets while cloning security rules:
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone security-rules --folder "cdot65" --rulebase "pre" --exclude-devices "DeviceX" --exclude-snippets "snipA,snipB"
+scm-clone security-rules --source-folder "cdot65" --rulebase "pre" --exclude-devices "DeviceX" --exclude-snippets "snipA,snipB"
 ```
 </div>
 
@@ -177,7 +178,7 @@ To automatically approve and commit the changes:
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone security-rules --folder "cdot65" --rulebase "pre" -A --commit-and-push
+scm-clone security-rules --source-folder "cdot65" --rulebase "pre" -A --commit-and-push
 ```
 </div>
 
@@ -188,7 +189,7 @@ scm-clone security-rules --folder "cdot65" --rulebase "pre" -A --commit-and-push
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone addresses --folder "Texas" --settings-file "production_settings.yaml"
+scm-clone addresses --source-folder "Texas" --settings-file "production_settings.yaml"
 ```
 </div>
 
@@ -201,7 +202,7 @@ This command uses `production_settings.yaml` instead of the default `settings.ya
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone addresses --folder "Texas" -R
+scm-clone addresses --source-folder "Texas" -R
 ```
 </div>
 
@@ -213,7 +214,7 @@ all at once:
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone tags --folder "Texas" --exclude-folders "All,Default" -A -R -Q
+scm-clone tags --source-folder "Texas" --exclude-folders "All,Default" -A -R -Q
 ```
 </div>
 

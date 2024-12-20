@@ -70,20 +70,20 @@ With `settings.yaml` ready, cloning objects typically involves specifying a fold
 clone address objects:
 
 ```bash
-scm-clone addresses --folder "Texas"
+scm-clone addresses --source-folder "Texas"
 ```
 
 If `auto_approve` is disabled by default in `settings.yaml`, you’ll be prompted before actual creation. If you wish to
 override this at runtime:
 
 ```bash
-scm-clone addresses --folder "Texas" -A
+scm-clone addresses --source-folder "Texas" -A
 ```
 
 This command auto-approves without prompting. Similarly, to run in dry-run mode or commit after creation:
 
 ```bash
-scm-clone addresses --folder "Texas" -D --commit-and-push
+scm-clone addresses --source-folder "Texas" -D --commit-and-push
 ```
 
 This simulates the creation without applying changes (`-D`) and would commit changes if actually applied. Remove `-D` to

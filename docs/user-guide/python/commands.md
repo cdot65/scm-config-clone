@@ -99,19 +99,20 @@ available commands and their primary purposes.
 
 **Common Flags and Arguments:**
 
-| Argument/Flag         | Description                                                                  | Default             |
-|-----------------------|------------------------------------------------------------------------------|---------------------|
-| `--folder`            | The folder from which to retrieve and clone objects.                         | None (prompted)     |
-| `--exclude-folders`   | Comma-separated list of folders to exclude from retrieval.                   | None                |
-| `--exclude-snippets`  | Comma-separated list of snippets to exclude from retrieval.                  | None                |
-| `--exclude-devices`   | Comma-separated list of devices to exclude from retrieval.                   | None                |
-| `--commit-and-push`   | If set, commit changes on the destination tenant after creating objects.     | False               |
-| `--auto-approve, -A`  | If set (or configured in settings), skip confirmation prompt before cloning. | Value from settings |
-| `--create-report, -R` | If set (or configured in settings), append results to `result.csv`.          | Value from settings |
-| `--dry-run, -D`       | If set (or configured in settings), simulate without applying changes.       | Value from settings |
-| `--quiet-mode, -Q`    | If set (or configured in settings), hide console output except logs.         | Value from settings |
-| `--logging-level, -L` | Override logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL).              | Value from settings |
-| `--settings-file, -s` | Path to the YAML settings file.                                              | `settings.yaml`     |
+| Argument/Flag          | Description                                                                  | Default             |
+|------------------------|------------------------------------------------------------------------------|---------------------|
+| `--source-folder`      | The folder from which to retrieve and clone objects.                         | None (prompted)     |
+| `--destination-folder` | The folder where the cloned objects will be created.                         | None (prompted)     |
+| `--exclude-folders`    | Comma-separated list of folders to exclude from retrieval.                   | None                |
+| `--exclude-snippets`   | Comma-separated list of snippets to exclude from retrieval.                  | None                |
+| `--exclude-devices`    | Comma-separated list of devices to exclude from retrieval.                   | None                |
+| `--commit-and-push`    | If set, commit changes on the destination tenant after creating objects.     | False               |
+| `--auto-approve, -A`   | If set (or configured in settings), skip confirmation prompt before cloning. | Value from settings |
+| `--create-report, -R`  | If set (or configured in settings), append results to `result.csv`.          | Value from settings |
+| `--dry-run, -D`        | If set (or configured in settings), simulate without applying changes.       | Value from settings |
+| `--quiet-mode, -Q`     | If set (or configured in settings), hide console output except logs.         | Value from settings |
+| `--logging-level, -L`  | Override logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL).              | Value from settings |
+| `--settings-file, -s`  | Path to the YAML settings file.                                              | `settings.yaml`     |
 
 ## Usage Examples
 
@@ -137,7 +138,7 @@ Below are some real-world scenarios demonstrating how to use `scm-clone` with va
    <div class="termy">
    <!-- termynal -->
    ```bash
-   scm-clone addresses --folder "Texas"
+   scm-clone addresses --source-folder "Texas"
    ```
    </div>
 
@@ -151,7 +152,7 @@ If you set `auto_approve: false` in `settings.yaml`, you can override it at runt
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone addresses --folder "Texas" -A
+scm-clone addresses --source-folder "Texas" -A
 ```
 </div>
 
@@ -162,7 +163,7 @@ Similarly, if you want to run in dry-run mode (coming soon):
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone addresses --folder "Texas" -D
+scm-clone addresses --source-folder "Texas" -D
 ```
 </div>
 
@@ -175,7 +176,7 @@ You can exclude certain folders, snippets, or devices from retrieval:
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone tags --folder "Texas" \
+scm-clone tags --source-folder "Texas" \
                --exclude-folders "All,Default" \
                --exclude-snippets "predefined" \
                --exclude-devices "DeviceA"
@@ -192,7 +193,7 @@ If you want to commit your changes automatically after creation:
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone address-groups --folder "Texas" --commit-and-push
+scm-clone address-groups --source-folder "Texas" --commit-and-push
 ```
 </div>
 
@@ -205,7 +206,7 @@ If `create_report` is enabled, results will be appended to `result.csv`. To over
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone applications --folder "Texas" -R
+scm-clone applications --source-folder "Texas" -R
 ```
 </div>
 

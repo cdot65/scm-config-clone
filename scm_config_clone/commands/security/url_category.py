@@ -61,11 +61,17 @@ def build_create_params(
 
 
 def url_categories(
-    folder: Optional[str] = typer.Option(
+    source_folder: Optional[str] = typer.Option(
         None,
-        "--folder",
-        prompt="Please enter the folder name",
+        "--source-folder",
+        prompt="Folder in source tenant where URL category objects are located",
         help="The folder to focus on when retrieving and cloning URL categories.",
+    ),
+    destination_folder: Optional[str] = typer.Option(
+        None,
+        "--destination-folder",
+        prompt="Folder in destination tenant where URL category objects are going",
+        help="The folder to focus on when pushing the URL categories to.",
     ),
     exclude_folders: str = typer.Option(
         None,
@@ -146,7 +152,8 @@ def url_categories(
     7. Display the results, including successfully created objects and any errors.
 
     Args:
-        folder: The source folder from which to retrieve URL category objects.
+        source_folder: The source folder from which to retrieve URL category objects.
+        destination_folder: The destination folder from which to push URL category objects.
         exclude_folders: Comma-separated folder names to exclude from source retrieval.
         exclude_snippets: Comma-separated snippet names to exclude from source retrieval.
         exclude_devices: Comma-separated device names to exclude from source retrieval.
@@ -227,14 +234,14 @@ def url_categories(
     try:
         source_url_categories = URLCategories(source_client, max_limit=5000)
         source_objects = source_url_categories.list(
-            folder=folder,
+            folder=source_folder,
             exact_match=True,
             exclude_folders=exclude_folders_list,
             exclude_snippets=exclude_snippets_list,
             exclude_devices=exclude_devices_list,
         )
         logger.info(
-            f"Retrieved {len(source_objects)} URL category objects from source tenant folder '{folder}'."
+            f"Retrieved {len(source_objects)} URL category objects from source tenant folder '{source_folder}'."
         )
     except Exception as e:
         logger.error(f"Error retrieving URL category objects from source: {e}")
@@ -244,14 +251,14 @@ def url_categories(
     try:
         destination_url_categories = URLCategories(destination_client, max_limit=5000)
         destination_objects = destination_url_categories.list(
-            folder=folder,
+            folder=destination_folder,
             exact_match=True,
             exclude_folders=exclude_folders_list,
             exclude_snippets=exclude_snippets_list,
             exclude_devices=exclude_devices_list,
         )
         logger.info(
-            f"Retrieved {len(destination_objects)} URL category objects from source destination folder '{folder}'."
+            f"Retrieved {len(destination_objects)} URL category objects from destination tenant folder '{destination_folder}'."
         )
     except Exception as e:
         logger.error(f"Error retrieving URL category objects from destination: {e}")
@@ -313,7 +320,7 @@ def url_categories(
                 f.write(f"URL Category,{src_obj.name},{src_obj.folder}\n")
 
         try:
-            create_params = build_create_params(src_obj, folder)
+            create_params = build_create_params(src_obj, destination_folder)
         except ValueError as ve:
             error_objects.append([src_obj.name, str(ve)])
             continue
@@ -328,12 +335,17 @@ def url_categories(
             NameNotUniqueError,
             ObjectNotPresentError,
         ) as e:
-            # Use the exception's class name as the error message
-            error_type = type(e).__name__
+            if logging_level == "DEBUG":
+                error_type = str(e)
+            else:
+                error_type = type(e).__name__
             error_objects.append([src_obj.name, error_type])
-            continue
-        except Exception:  # noqa
-            error_objects.append([src_obj.name, "unknown error"])
+        except Exception as e:  # noqa
+            if logging_level == "DEBUG":
+                error_type = str(e)
+            else:
+                error_type = "Unknown Error, enable debug logging for more details."
+            error_objects.append([src_obj.name, error_type])
             continue
 
     # Display results if not quiet_mode
@@ -341,11 +353,7 @@ def url_categories(
         typer.echo("\nSuccessfully created the following URL category objects:")
         created_table = []
         for obj in created_objs:
-            created_table.append(
-                [
-                    obj.name,
-                ]
-            )
+            created_table.append([obj.name])
 
         typer.echo(
             tabulate(
@@ -369,7 +377,7 @@ def url_categories(
     if commit_and_push and created_objs:
         try:
             commit_params = {
-                "folders": [folder],
+                "folders": [destination_folder],
                 "description": "Cloned URL category objects",
                 "sync": True,
             }
