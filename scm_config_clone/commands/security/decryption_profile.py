@@ -76,11 +76,17 @@ def build_create_params(
 
 
 def decryption_profiles(
-    folder: Optional[str] = typer.Option(
+    source_folder: Optional[str] = typer.Option(
         None,
-        "--folder",
-        prompt="Please enter the folder name",
+        "--source-folder",
+        prompt="Folder in source tenant where decryption profile objects are located",
         help="The folder to focus on when retrieving and cloning decryption profiles.",
+    ),
+    destination_folder: Optional[str] = typer.Option(
+        None,
+        "--destination-folder",
+        prompt="Folder in destination tenant where decryption profile objects are going",
+        help="The folder to focus on when pushing the decryption profiles to.",
     ),
     exclude_folders: str = typer.Option(
         None,
@@ -161,7 +167,8 @@ def decryption_profiles(
     7. Display the results, including successfully created objects and any errors.
 
     Args:
-        folder: The source folder from which to retrieve decryption profile objects.
+        source_folder: The source folder from which to retrieve decryption profile objects.
+        destination_folder: The destination folder from which to push decryption profile objects.
         exclude_folders: Comma-separated folder names to exclude from source retrieval.
         exclude_snippets: Comma-separated snippet names to exclude from source retrieval.
         exclude_devices: Comma-separated device names to exclude from source retrieval.
@@ -242,14 +249,14 @@ def decryption_profiles(
     try:
         source_profiles = DecryptionProfile(source_client, max_limit=5000)
         source_objects = source_profiles.list(
-            folder=folder,
+            folder=source_folder,
             exact_match=True,
             exclude_folders=exclude_folders_list,
             exclude_snippets=exclude_snippets_list,
             exclude_devices=exclude_devices_list,
         )
         logger.info(
-            f"Retrieved {len(source_objects)} decryption profile objects from source tenant folder '{folder}'."
+            f"Retrieved {len(source_objects)} decryption profile objects from source tenant folder '{source_folder}'."
         )
     except Exception as e:
         logger.error(f"Error retrieving decryption profile objects from source: {e}")
@@ -259,14 +266,14 @@ def decryption_profiles(
     try:
         destination_profiles = DecryptionProfile(destination_client, max_limit=5000)
         destination_objects = destination_profiles.list(
-            folder=folder,
+            folder=destination_folder,
             exact_match=True,
             exclude_folders=exclude_folders_list,
             exclude_snippets=exclude_snippets_list,
             exclude_devices=exclude_devices_list,
         )
         logger.info(
-            f"Retrieved {len(destination_objects)} decryption profile objects from destination tenant folder '{folder}'."
+            f"Retrieved {len(destination_objects)} decryption profile objects from destination tenant folder '{destination_folder}'."
         )
     except Exception as e:
         logger.error(
@@ -330,7 +337,7 @@ def decryption_profiles(
                 f.write(f"Decryption Profile,{src_obj.name},{src_obj.folder}\n")
 
         try:
-            create_params = build_create_params(src_obj, folder)
+            create_params = build_create_params(src_obj, destination_folder)
         except ValueError as ve:
             error_objects.append([src_obj.name, str(ve)])
             continue
@@ -347,11 +354,17 @@ def decryption_profiles(
             NameNotUniqueError,
             ObjectNotPresentError,
         ) as e:
-            error_type = type(e).__name__
+            if logging_level == "DEBUG":
+                error_type = str(e)
+            else:
+                error_type = type(e).__name__
             error_objects.append([src_obj.name, error_type])
-            continue
-        except Exception:  # noqa
-            error_objects.append([src_obj.name, "unknown error"])
+        except Exception as e:  # noqa
+            if logging_level == "DEBUG":
+                error_type = str(e)
+            else:
+                error_type = "Unknown Error, enable debug logging for more details."
+            error_objects.append([src_obj.name, error_type])
             continue
 
     # Display results if not quiet_mode
@@ -383,7 +396,7 @@ def decryption_profiles(
     if commit_and_push and created_objs:
         try:
             commit_params = {
-                "folders": [folder],
+                "folders": [destination_folder],
                 "description": "Cloned decryption profile objects",
                 "sync": True,
             }

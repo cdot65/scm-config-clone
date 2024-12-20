@@ -77,11 +77,17 @@ def build_create_params(
 
 
 def security_rules(
-    folder: Optional[str] = typer.Option(
+    source_folder: Optional[str] = typer.Option(
         None,
-        "--folder",
-        prompt="Please enter the folder name",
+        "--source-folder",
+        prompt="Folder in source tenant where security rules are located",
         help="The folder to focus on when retrieving and cloning security rules.",
+    ),
+    destination_folder: Optional[str] = typer.Option(
+        None,
+        "--destination-folder",
+        prompt="Folder in destination tenant where security rules are going",
+        help="The folder to focus on when pushing the security rules to.",
     ),
     rulebase: str = typer.Option(
         "pre",
@@ -167,7 +173,8 @@ def security_rules(
     7. Display the results, including successfully created objects and any errors.
 
     Args:
-        folder: The source folder from which to retrieve security rules.
+        source_folder: The source folder from which to retrieve security rules.
+        destination_folder: The destination folder from which to push security rules.
         rulebase: The rulebase to target (pre or post).
         exclude_folders: Comma-separated folder names to exclude from source retrieval.
         exclude_snippets: Comma-separated snippet names to exclude from source retrieval.
@@ -249,7 +256,7 @@ def security_rules(
     try:
         source_rules = SecurityRule(source_client, max_limit=5000)
         source_objects = source_rules.list(
-            folder=folder,
+            folder=source_folder,
             rulebase=rulebase,
             exact_match=True,
             exclude_folders=exclude_folders_list,
@@ -257,7 +264,7 @@ def security_rules(
             exclude_devices=exclude_devices_list,
         )
         logger.info(
-            f"Retrieved {len(source_objects)} security rules from source tenant folder '{folder}'."
+            f"Retrieved {len(source_objects)} security rules from source tenant folder '{source_folder}'."
         )
     except Exception as e:
         logger.error(f"Error retrieving security rules from source: {e}")
@@ -267,7 +274,7 @@ def security_rules(
     try:
         destination_rules = SecurityRule(destination_client, max_limit=5000)
         destination_objects = destination_rules.list(
-            folder=folder,
+            folder=destination_folder,
             rulebase=rulebase,
             exact_match=True,
             exclude_folders=exclude_folders_list,
@@ -275,7 +282,7 @@ def security_rules(
             exclude_devices=exclude_devices_list,
         )
         logger.info(
-            f"Retrieved {len(destination_objects)} security rules from destination tenant folder '{folder}'."
+            f"Retrieved {len(destination_objects)} security rules from destination tenant folder '{destination_folder}'."
         )
     except Exception as e:
         logger.error(f"Error retrieving security rules from destination: {e}")
@@ -337,7 +344,7 @@ def security_rules(
                 f.write(f"Security Rule,{src_obj.name},{src_obj.folder}\n")
 
         try:
-            create_params = build_create_params(src_obj, folder)
+            create_params = build_create_params(src_obj, destination_folder)
         except ValueError as ve:
             error_objects.append([src_obj.name, str(ve)])
             continue
@@ -352,11 +359,17 @@ def security_rules(
             NameNotUniqueError,
             ObjectNotPresentError,
         ) as e:
-            error_type = type(e).__name__
+            if logging_level == "DEBUG":
+                error_type = str(e)
+            else:
+                error_type = type(e).__name__
             error_objects.append([src_obj.name, error_type])
-            continue
-        except Exception:  # noqa
-            error_objects.append([src_obj.name, "unknown error"])
+        except Exception as e:  # noqa
+            if logging_level == "DEBUG":
+                error_type = str(e)
+            else:
+                error_type = "Unknown Error, enable debug logging for more details."
+            error_objects.append([src_obj.name, error_type])
             continue
 
     # Display results if not quiet_mode
@@ -388,7 +401,7 @@ def security_rules(
     if commit_and_push and created_objs:
         try:
             commit_params = {
-                "folders": [folder],
+                "folders": [destination_folder],
                 "description": "Cloned security rules",
                 "sync": True,
             }

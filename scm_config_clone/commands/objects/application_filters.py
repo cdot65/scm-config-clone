@@ -73,11 +73,17 @@ def build_create_params(
 
 
 def application_filters(
-    folder: Optional[str] = typer.Option(
+    source_folder: Optional[str] = typer.Option(
         None,
-        "--folder",
-        prompt="Please enter the folder name",
+        "--source-folder",
+        prompt="Folder in source tenant where application filter objects are located",
         help="The folder to focus on when retrieving and cloning application filters.",
+    ),
+    destination_folder: Optional[str] = typer.Option(
+        None,
+        "--destination-folder",
+        prompt="Folder in destination tenant where application filter objects are going",
+        help="The folder to focus on when pushing the application filters to.",
     ),
     exclude_folders: str = typer.Option(
         None,
@@ -153,7 +159,8 @@ def application_filters(
     7. Display the results, including successfully created objects and any errors.
 
     Args:
-        folder: The source folder from which to retrieve application filter objects.
+        source_folder: The source folder from which to retrieve application filter objects.
+        destination_folder: The destination folder from which to push application filter objects.
         exclude_folders: Comma-separated folder names to exclude from source retrieval.
         exclude_snippets: Comma-separated snippet names to exclude from source retrieval.
         commit_and_push: If True, commit changes in the destination tenant after creation.
@@ -232,13 +239,13 @@ def application_filters(
     try:
         source_app_filters = ApplicationFilters(source_client, max_limit=5000)
         source_objects = source_app_filters.list(
-            folder=folder,
+            folder=source_folder,
             exact_match=True,
             exclude_folders=exclude_folders_list,
             exclude_snippets=exclude_snippets_list,
         )
         logger.info(
-            f"Retrieved {len(source_objects)} application filter objects from source tenant folder '{folder}'."
+            f"Retrieved {len(source_objects)} application filter objects from source tenant folder '{source_folder}'."
         )
     except Exception as e:
         logger.error(f"Error retrieving application filter objects from source: {e}")
@@ -248,13 +255,13 @@ def application_filters(
     try:
         destination_app_filters = ApplicationFilters(destination_client, max_limit=5000)
         destination_objects = destination_app_filters.list(
-            folder=folder,
+            folder=destination_folder,
             exact_match=True,
             exclude_folders=exclude_folders_list,
             exclude_snippets=exclude_snippets_list,
         )
         logger.info(
-            f"Retrieved {len(destination_objects)} application filter objects from destination tenant folder '{folder}'."
+            f"Retrieved {len(destination_objects)} application filter objects from destination tenant folder '{destination_folder}'."
         )
     except Exception as e:
         logger.error(
@@ -318,7 +325,7 @@ def application_filters(
                 f.write(f"Application Filter,{src_obj.name},{src_obj.folder}\n")
 
         try:
-            create_params = build_create_params(src_obj, folder)
+            create_params = build_create_params(src_obj, destination_folder)
         except ValueError as ve:
             error_objects.append([src_obj.name, str(ve)])
             continue
@@ -335,11 +342,17 @@ def application_filters(
             NameNotUniqueError,
             ObjectNotPresentError,
         ) as e:
-            error_type = type(e).__name__
+            if logging_level == "DEBUG":
+                error_type = str(e)
+            else:
+                error_type = type(e).__name__
             error_objects.append([src_obj.name, error_type])
-            continue
-        except Exception:  # noqa
-            error_objects.append([src_obj.name, "unknown error"])
+        except Exception as e:  # noqa
+            if logging_level == "DEBUG":
+                error_type = str(e)
+            else:
+                error_type = "Unknown Error, enable debug logging for more details."
+            error_objects.append([src_obj.name, error_type])
             continue
 
     # Display results if not quiet_mode
@@ -371,7 +384,7 @@ def application_filters(
     if commit_and_push and created_objs:
         try:
             commit_params = {
-                "folders": [folder],
+                "folders": [destination_folder],
                 "description": "Cloned application filter objects",
                 "sync": True,
             }
