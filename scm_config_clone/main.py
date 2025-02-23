@@ -30,6 +30,7 @@ from scm_config_clone import (
     dns_security_profiles,
     external_dynamic_lists,
     hip_objects,
+    nat_rules,
     security_rules,
     services,
     service_groups,
@@ -104,6 +105,12 @@ app.command(
     name="hip-objects",
     help="Clone hip objects.",
 )(hip_objects)
+
+# NAT Rules
+app.command(
+    name="nat-rules",
+    help="Clone NAT rules.",
+)(nat_rules)
 
 # Services
 app.command(

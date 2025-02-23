@@ -1,5 +1,6 @@
 # scm_config_clone/__init__.py
 
+from .commands.network.nat_rule import nat_rules
 from .commands.objects.address import addresses
 from .commands.objects.address_group import address_groups
 from .commands.objects.application import applications
