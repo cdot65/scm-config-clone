@@ -5,6 +5,19 @@ enhancements, and fixes in each version of the tool.
 
 ---
 
+## Version 0.2.6
+
+**Release Date:** February 23rd, 2025
+
+### Introduction
+
+- **dependency update**:
+    - Update `pan-scm-sdk` and `setuptools` to latest versions.
+- **NAT rule update**:
+    - Added support for cloning NAT rules.
+
+---
+
 ## Version 0.2.2
 
 **Release Date:** December 18th, 2024
