@@ -28,19 +28,21 @@ from scm_config_clone.utilities import (
 
 def build_create_params(
     src_obj: ApplicationResponseModel,
-    folder: str,
+    destination: str,
+    context_type: str = "folder",
 ) -> Dict[str, Any]:
     """
     Construct the dictionary of parameters required to create a new application object.
 
-    Given an existing ApplicationResponseModel (source object) and a target folder,
-    this function builds a dictionary with all necessary fields for creating
+    Given an existing ApplicationResponseModel (source object), a destination folder or snippet,
+    and an optional context type, this function builds a dictionary with all necessary fields for creating
     a new application in the destination tenant. It uses `model_dump` on a Pydantic model
     to ensure only valid, explicitly set fields are included.
 
     Args:
         src_obj: The ApplicationResponseModel representing the source application object.
-        folder: The folder in the destination tenant where the object should be created.
+        destination: The folder or snippet in the destination tenant where the object should be created.
+        context_type: The type of destination context (folder/snippet). Defaults to "folder".
 
     Returns:
         A dictionary containing the fields required for `Application.create()`.
@@ -48,7 +50,7 @@ def build_create_params(
     """
     data = {
         "name": src_obj.name,
-        "folder": folder,
+        context_type: destination,
         "category": src_obj.category,
         "subcategory": src_obj.subcategory,
         "technology": src_obj.technology,
@@ -74,17 +76,31 @@ def build_create_params(
 
 
 def applications(
+    context_type: str = typer.Option(
+        "folder",
+        "--context",
+        help="Specify the context type: 'folder' or 'snippet'",
+    ),
+    context_source_name: Optional[str] = typer.Option(
+        None,
+        "--source",
+        help="Name of the source folder or snippet to retrieve objects from.",
+    ),
+    context_destination_name: Optional[str] = typer.Option(
+        None,
+        "--destination",
+        help="Name of the destination folder or snippet to create objects in.",
+    ),
+    # Legacy parameters (deprecated)
     source_folder: Optional[str] = typer.Option(
         None,
         "--source-folder",
-        prompt="Folder in source tenant where application objects are located",
-        help="The folder to focus on when retrieving and cloning applications.",
+        help="[DEPRECATED] Use --source with --context=folder instead.",
     ),
     destination_folder: Optional[str] = typer.Option(
         None,
         "--destination-folder",
-        prompt="Folder in destination tenant where application objects are going",
-        help="The folder to focus on when pushing the applications to.",
+        help="[DEPRECATED] Use --destination with --context=folder instead.",
     ),
     exclude_folders: str = typer.Option(
         None,
@@ -95,6 +111,11 @@ def applications(
         None,
         "--exclude-snippets",
         help="Comma-separated list of snippets to exclude from the retrieval.",
+    ),
+    exclude_devices: str = typer.Option(
+        None,
+        "--exclude-devices",
+        help="Comma-separated list of devices to exclude from the retrieval.",
     ),
     commit_and_push: bool = typer.Option(
         False,
@@ -160,10 +181,14 @@ def applications(
     7. Display the results, including successfully created objects and any errors.
 
     Args:
-        source_folder: The source folder from which to retrieve application objects.
-        destination_folder: The destination folder from which to push application objects.
+        context_type: Specify the context type ('folder' or 'snippet') for operations.
+        context_source_name: Name of source folder or snippet to retrieve objects from.
+        context_destination_name: Name of destination folder or snippet to create objects in.
+        source_folder: [DEPRECATED] The source folder from which to retrieve application objects.
+        destination_folder: [DEPRECATED] The destination folder from which to push application objects.
         exclude_folders: Comma-separated folder names to exclude from source retrieval.
         exclude_snippets: Comma-separated snippet names to exclude from source retrieval.
+        exclude_devices: Comma-separated device names to exclude from source retrieval.
         commit_and_push: If True, commit changes in the destination tenant after creation.
         auto_approve: If True or set in settings, skip the confirmation prompt before creating objects.
         create_report: If True or set in settings, create/append a CSV file with task results.
@@ -199,6 +224,23 @@ def applications(
     # Parse CSV options
     exclude_folders_list = parse_csv_option(exclude_folders)
     exclude_snippets_list = parse_csv_option(exclude_snippets)
+    exclude_devices_list = (
+        parse_csv_option(exclude_devices) if exclude_devices else None
+    )
+
+    # Resolve parameters (prioritize new over legacy)
+    resolved_source = context_source_name or source_folder
+    resolved_destination = context_destination_name or destination_folder
+
+    # Prompt if still None after resolution
+    if resolved_source is None:
+        resolved_source = typer.prompt(
+            f"Name of source {context_type} where objects are located"
+        )
+    if resolved_destination is None:
+        resolved_destination = typer.prompt(
+            f"Name of destination {context_type} where objects will go"
+        )
 
     # Authenticate with source
     try:
@@ -238,15 +280,29 @@ def applications(
 
     # Retrieve application objects from source
     try:
-        source_applications = Application(source_client, max_limit=5000)
-        source_objects = source_applications.list(
-            folder=source_folder,
-            exact_match=True,
-            exclude_folders=exclude_folders_list,
-            exclude_snippets=exclude_snippets_list,
-        )
+        source_application_api = Application(source_client, max_limit=5000)
+
+        # Call list() with different parameters based on context
+        list_params = {
+            "exact_match": True,
+            "exclude_folders": exclude_folders_list,
+            "exclude_snippets": exclude_snippets_list,
+        }
+
+        # Add exclude_devices if it was provided
+        if exclude_devices_list:
+            list_params["exclude_devices"] = exclude_devices_list
+
+        # Add context-specific parameter
+        if context_type == "folder":
+            list_params["folder"] = resolved_source
+        else:  # context == "snippet"
+            list_params["snippet"] = resolved_source
+
+        source_objects = source_application_api.list(**list_params)
+
         logger.info(
-            f"Retrieved {len(source_objects)} application objects from source tenant folder '{source_folder}'."
+            f"Retrieved {len(source_objects)} application objects from source {context_type} '{resolved_source}'."
         )
     except Exception as e:
         logger.error(f"Error retrieving application objects from source: {e}")
@@ -254,18 +310,38 @@ def applications(
 
     # Retrieve application objects from destination
     try:
-        destination_applications = Application(destination_client, max_limit=5000)
-        destination_objects = destination_applications.list(
-            folder=destination_folder,
-            exact_match=True,
-            exclude_folders=exclude_folders_list,
-            exclude_snippets=exclude_snippets_list,
-        )
-        logger.info(
-            f"Retrieved {len(destination_objects)} application objects from destination tenant folder '{destination_folder}'."
-        )
+        destination_client_api = Application(destination_client, max_limit=5000)
+
+        # Different API call based on context type
+        if context_type == "folder":
+            destination_objects = destination_client_api.list(
+                folder=resolved_destination,
+                exact_match=True,
+                exclude_folders=exclude_folders_list,
+                exclude_snippets=exclude_snippets_list,
+                **(
+                    {"exclude_devices": exclude_devices_list}
+                    if exclude_devices_list
+                    else {}
+                ),
+            )
+            logger.info(
+                f"Retrieved {len(destination_objects)} objects from destination folder '{resolved_destination}'"
+            )
+        elif context_type == "snippet":
+            # Check if the API supports retrieving by snippet directly
+            destination_objects = destination_client_api.list(
+                snippet=resolved_destination,
+                exact_match=True,
+            )
+            logger.info(
+                f"Retrieved {len(destination_objects)} objects from destination snippet '{resolved_destination}'"
+            )
+        else:
+            logger.error(f"Invalid context type: {context_type}")
+            raise typer.Exit(code=1)
     except Exception as e:
-        logger.error(f"Error retrieving application objects from destination: {e}")
+        logger.error(f"Error retrieving objects: {e}")
         raise typer.Exit(code=1)
 
     # Compare and get the status information
@@ -321,10 +397,17 @@ def applications(
 
         if create_report:
             with open("result.csv", "a") as f:
-                f.write(f"Application,{src_obj.name},{src_obj.folder}\n")
+                context_property = "folder" if context_type == "folder" else "snippet"
+                f.write(
+                    f"Application,{src_obj.name},{getattr(src_obj, context_property)}\n"
+                )
 
         try:
-            create_params = build_create_params(src_obj, destination_folder)
+            create_params = build_create_params(
+                src_obj=src_obj,
+                destination=resolved_destination,
+                context_type=context_type,
+            )
         except ValueError as ve:
             error_objects.append([src_obj.name, str(ve)])
             continue
@@ -378,11 +461,11 @@ def applications(
         )
 
     # Commit changes if requested and objects were created
-    if commit_and_push and created_objs:
+    if commit_and_push and created_objs and context_type == "folder":
         try:
             commit_params = {
-                "folders": [destination_folder],
-                "description": "Cloned application objects",
+                "folders": [resolved_destination],
+                "description": f"Cloned application objects from {context_type} {resolved_source}",
                 "sync": True,
             }
             result = destination_applications.commit(**commit_params)
@@ -393,6 +476,10 @@ def applications(
         except Exception as e:
             logger.error(f"Error committing application objects in destination: {e}")
             raise typer.Exit(code=1)
+    elif commit_and_push and created_objs and context_type == "snippet":
+        logger.info(
+            f"SCM does not support committing with a snippet context; perform this task on the destination tenant folder manually. Skipping commit."
+        )
     else:
         if created_objs and not commit_and_push:
             logger.info(
