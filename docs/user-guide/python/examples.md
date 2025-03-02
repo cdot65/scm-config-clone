@@ -15,6 +15,7 @@ rules, services) with different filters and runtime overrides.
 - [Cloning Security Rules](#cloning-security-rules)
 - [Cloning Remote Networks](#cloning-remote-networks)
 - [Cloning Syslog Server Profiles](#cloning-syslog-server-profiles)
+- [Other Supported Commands](#other-supported-commands)
 - [Advanced Examples](#advanced-examples)
 
 ## Overview
@@ -334,6 +335,48 @@ scm-clone syslog-server-profiles --source "Logging" --logging-level DEBUG
 </div>
 
 This increases the logging level to DEBUG to help diagnose any issues that might occur during the cloning process.
+
+## Other Supported Commands
+
+The following commands are also available but not covered in detail in this examples document. They all follow the same pattern and support the same flags and arguments as the commands shown above.
+
+### Object Commands
+
+- **address-groups**: Clone address group objects between tenants
+- **application-filters**: Clone application filter objects 
+- **application-groups**: Clone application group objects
+- **dynamic-user-groups**: Clone dynamic user group objects
+- **hip-profiles**: Clone HIP profile objects
+- **http-server-profiles**: Clone HTTP server profile objects
+- **log-forwarding-profiles**: Clone log forwarding profile objects
+- **quarantined-devices**: Clone quarantined device objects
+- **regions**: Clone region objects
+- **schedules**: Clone schedule objects
+- **service-groups**: Clone service group objects
+
+### Security Service Commands
+
+- **anti-spyware-profiles**: Clone anti-spyware profile objects
+- **decryption-profiles**: Clone decryption profile objects
+- **dns-security-profiles**: Clone DNS security profile objects
+- **url-categories**: Clone URL category objects
+- **vulnerability-profiles**: Clone vulnerability protection profile objects
+- **wildfire-profiles**: Clone Wildfire antivirus profile objects
+
+### Network Service Commands
+
+- **nat-rules**: Clone NAT rule objects
+
+To use any of these commands, follow the same patterns shown in the examples above:
+
+<div class="termy">
+<!-- termynal -->
+```bash
+scm-clone [command-name] --source "Source Folder" [other-options]
+```
+</div>
+
+For detailed information about each command, including its specific parameters and behavior, refer to the [Commands](commands.md) section.
 
 ## Advanced Examples
 
