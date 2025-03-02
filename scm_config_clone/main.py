@@ -9,6 +9,7 @@ Commands:
 - `addresses`: Clone address objects.
 - `settings`: Create settings file.
 - `tags`: Clone tag objects from source to destination tenant, focusing on a specific folder.
+- `remote-networks`: Clone remote network objects from source to destination tenant.
 
 Usage:
     scm-clone <command> [OPTIONS]
@@ -28,12 +29,21 @@ from scm_config_clone import (
     create_settings,
     decryption_profiles,
     dns_security_profiles,
+    dynamic_user_groups,
     external_dynamic_lists,
     hip_objects,
+    hip_profiles,
+    http_server_profiles,
+    log_forwarding_profiles,
     nat_rules,
+    quarantined_devices,
+    regions,
+    remote_networks,
+    schedules,
     security_rules,
     services,
     service_groups,
+    syslog_server_profiles,
     tags,
     url_categories,
     vulnerability_protection_profiles,
@@ -106,6 +116,12 @@ app.command(
     help="Clone hip objects.",
 )(hip_objects)
 
+# HIP Profiles
+app.command(
+    name="hip-profiles",
+    help="Clone HIP profiles.",
+)(hip_profiles)
+
 # NAT Rules
 app.command(
     name="nat-rules",
@@ -129,6 +145,48 @@ app.command(
     name="tags",
     help="Clone tags.",
 )(tags)
+
+# Dynamic User Groups
+app.command(
+    name="dynamic-user-groups",
+    help="Clone dynamic user groups.",
+)(dynamic_user_groups)
+
+# HTTP Server Profiles
+app.command(
+    name="http-server-profiles",
+    help="Clone HTTP server profiles.",
+)(http_server_profiles)
+
+# Log Forwarding Profiles
+app.command(
+    name="log-forwarding-profiles",
+    help="Clone log forwarding profiles.",
+)(log_forwarding_profiles)
+
+# Syslog Server Profiles
+app.command(
+    name="syslog-server-profiles",
+    help="Clone syslog server profiles.",
+)(syslog_server_profiles)
+
+# Quarantined Devices
+app.command(
+    name="quarantined-devices",
+    help="Clone quarantined devices.",
+)(quarantined_devices)
+
+# Region Objects
+app.command(
+    name="regions",
+    help="Clone region objects.",
+)(regions)
+
+# Schedule Objects
+app.command(
+    name="schedules",
+    help="Clone schedule objects.",
+)(schedules)
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Security Services
@@ -176,6 +234,16 @@ app.command(
     name="wildfire-profiles",
     help="Clone Wildfire AV profiles.",
 )(wildfire_antivirus_profiles)
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Deployments
+# ---------------------------------------------------------------------------------------------------------------------
+
+# Remote Networks
+app.command(
+    name="remote-networks",
+    help="Clone remote network objects between SASE tenants.",
+)(remote_networks)
 
 
 if __name__ == "__main__":

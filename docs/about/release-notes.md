@@ -5,11 +5,39 @@ enhancements, and fixes in each version of the tool.
 
 ---
 
+## Version 0.3.0
+
+**Release Date:** March 2, 2025
+
+### New Features
+
+- **Expanded Command Set**:
+  - Added support for syslog server profiles
+  - Added support for SASE remote networks
+  - Complete coverage of all object, security, network, and deployment services
+
+- **Documentation Overhaul**:
+  - Comprehensive documentation for all available commands
+  - Added detailed examples for syslog server profiles and remote networks
+  - Organized commands by categories (Objects, Security Services, Network Services, Deployment Services)
+  - Enhanced command reference with complete descriptions
+
+- **Context Support**:
+  - Added support for both folder and snippet context types
+  - Improved context-type handling across all relevant commands
+
+- **API Improvements**:
+  - Enhanced pagination handling
+  - Better error reporting and handling
+  - Optimized API calls for better performance
+
+---
+
 ## Version 0.2.6
 
 **Release Date:** February 23rd, 2025
 
-### Introduction
+### Changes
 
 - **dependency update**:
     - Update `pan-scm-sdk` and `setuptools` to latest versions.

@@ -75,7 +75,7 @@ With `settings.yaml` in place, you can run commands without repeatedly supplying
 The `scm-clone` CLI provides multiple sub-commands, each handling a different class of SCM objects. Below are the
 available commands and their primary purposes.
 
-### Objects and Security Services
+### Objects
 
 | Command                | Description                             |
 |------------------------|-----------------------------------------|
@@ -84,11 +84,24 @@ available commands and their primary purposes.
 | applications           | Clone application objects               |
 | application-filters    | Clone application filters               |
 | application-groups     | Clone application groups                |
+| dynamic-user-groups    | Clone dynamic user groups               |
 | edls                   | Clone external dynamic lists            |
 | hip-objects            | Clone HIP objects                       |
+| hip-profiles           | Clone HIP profiles                      |
+| http-server-profiles   | Clone HTTP server profiles              |
+| log-forwarding-profiles| Clone log forwarding profiles           |
+| quarantined-devices    | Clone quarantined devices               |
+| regions                | Clone region objects                    |
+| schedules              | Clone schedule objects                  |
 | services               | Clone services                          |
 | service-groups         | Clone service groups                    |
+| syslog-server-profiles | Clone syslog server profiles            |
 | tags                   | Clone tag objects                       |
+
+### Security Services
+
+| Command                | Description                             |
+|------------------------|-----------------------------------------|
 | anti-spyware-profiles  | Clone anti-spyware profiles             |
 | decryption-profiles    | Clone decryption profiles               |
 | dns-security-profiles  | Clone DNS security profiles             |
@@ -96,6 +109,18 @@ available commands and their primary purposes.
 | url-categories         | Clone URL categories                    |
 | vulnerability-profiles | Clone vulnerability protection profiles |
 | wildfire-profiles      | Clone Wildfire AV profiles              |
+
+### Network Services
+
+| Command                | Description                             |
+|------------------------|-----------------------------------------|
+| nat-rules              | Clone NAT rules                         |
+
+### Deployment Services
+
+| Command                | Description                             |
+|------------------------|-----------------------------------------|
+| remote-networks        | Clone remote network objects            |
 
 **Common Flags and Arguments:**
 
