@@ -393,8 +393,6 @@ This command uses `production_settings.yaml` instead of the default `settings.ya
 
 **Generating a Report**: If you want to record all cloned addresses into `result.csv` for auditing:
 
-> Note: this feature is not yet implemented.
-
 <div class="termy">
 <!-- termynal -->
 ```bash
@@ -402,7 +400,7 @@ scm-clone addresses --source-folder "Texas" -R
 ```
 </div>
 
-After cloning, the CLI will append the results to `result.csv`.
+After cloning, the CLI will append the results to `result.csv` with details about each cloned object.
 
 **Combining Flags**: For a scenario where you want to exclude folders, run quietly, auto-approve, and create a report
 all at once:
@@ -416,5 +414,119 @@ scm-clone tags --source-folder "Texas" --exclude-folders "All,Default" -A -R -Q
 
 This command retrieves and clones tags from the `"Texas"`, excluding `"All"` and `"Default"` folders, auto-approves
 without prompts, creates a CSV report, and runs quietly without console output.
+
+## Complete Tenant Migration Workflow
+
+This section demonstrates a comprehensive workflow for migrating configuration from one tenant to another.
+
+### Step 1: Initial Setup
+
+First, create your settings file with credentials for both source and destination tenants:
+
+<div class="termy">
+<!-- termynal -->
+```bash
+scm-clone settings
+```
+</div>
+
+Follow the prompts to enter your source and destination tenant credentials.
+
+### Step 2: Clone Static Objects First
+
+Start by cloning the foundational objects that other configurations may depend on:
+
+<div class="termy">
+<!-- termynal -->
+```bash
+# Clone address objects
+scm-clone addresses --source "Network Objects" --destination "Network Objects" --commit-and-push
+
+# Clone services
+scm-clone services --source "Service Objects" --destination "Service Objects" --commit-and-push
+
+# Clone tags
+scm-clone tags --source "Tags" --destination "Tags" --commit-and-push
+```
+</div>
+
+### Step 3: Clone Group Objects
+
+Next, clone group objects that reference the static objects:
+
+<div class="termy">
+<!-- termynal -->
+```bash
+# Clone address groups
+scm-clone address-groups --source "Network Objects" --destination "Network Objects" --commit-and-push
+
+# Clone service groups
+scm-clone service-groups --source "Service Objects" --destination "Service Objects" --commit-and-push
+
+# Clone application groups
+scm-clone application-groups --source "Applications" --destination "Applications" --commit-and-push
+```
+</div>
+
+### Step 4: Clone Security Profiles
+
+Before cloning security rules, set up the security profiles:
+
+<div class="termy">
+<!-- termynal -->
+```bash
+# Clone anti-spyware profiles
+scm-clone anti-spyware-profiles --source "Security Profiles" --destination "Security Profiles" --commit-and-push
+
+# Clone URL categories
+scm-clone url-categories --source "Security Profiles" --destination "Security Profiles" --commit-and-push
+
+# Clone other security profiles
+scm-clone vulnerability-profiles --source "Security Profiles" --destination "Security Profiles" --commit-and-push
+scm-clone wildfire-profiles --source "Security Profiles" --destination "Security Profiles" --commit-and-push
+```
+</div>
+
+### Step 5: Clone Security Rules
+
+Now you can clone the security rules that reference all the objects and profiles:
+
+<div class="termy">
+<!-- termynal -->
+```bash
+# Clone security rules
+scm-clone security-rules --source "Security" --destination "Security" --commit-and-push
+```
+</div>
+
+### Step 6: Clone NAT Rules
+
+Clone NAT rules after security rules:
+
+<div class="termy">
+<!-- termynal -->
+```bash
+# Clone NAT rules
+scm-clone nat-rules --source "NAT" --destination "NAT" --commit-and-push
+```
+</div>
+
+### Step 7: Clone SASE Configurations (if applicable)
+
+If you're also migrating SASE configurations:
+
+<div class="termy">
+<!-- termynal -->
+```bash
+# Clone remote networks
+scm-clone remote-networks --source "Remote Networks" --destination "Remote Networks" --commit-and-push
+```
+</div>
+
+### Step 8: Verify Migration
+
+After completing all the cloning operations, verify that all objects were successfully created and committed in the destination tenant. Look for any errors in the console output or log files.
+
+This comprehensive workflow ensures that objects are migrated in the correct dependency order, minimizing the risk of reference errors during the migration process.
 
 ---

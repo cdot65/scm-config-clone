@@ -16,8 +16,10 @@ these challenges by automating the cloning process, ensuring consistency and red
 - **Automated Cloning**: Eliminates the need for manual copying of configurations.
 - **Secure Credentials Handling**: Uses a `settings.yaml` file to store credentials securely.
 - **Comprehensive Coverage**: Supports a wide range of object types, security services, network services, and deployment services.
-- **Customizable**: Allows specifying folders and snippets with flexible filtering options.
+- **Multiple Context Support**: Works with folders, snippets, and device contexts to provide flexible configuration management.
+- **Advanced Filtering**: Allows excluding specific folders, snippets, or devices from cloning operations.
 - **User-Friendly**: Provides clear prompts and informative logging.
+- **Dry-Run Mode**: Simulates operations without making actual changes for risk-free testing.
 
 ## Supported Configuration Types
 
@@ -32,9 +34,14 @@ For a complete list of supported commands, see the [Commands Reference](python/c
 
 ## Workflow
 
-1. **Authentication**: Set up your credentials and project settings using the `settings` command.
-2. **Cloning Operations**: Use the available commands to clone various configuration objects between tenants.
-3. **Verification**: Confirm that configurations have been successfully cloned to the destination tenant.
+1. **Settings Setup**: Configure your credentials and project settings using the `settings` command.
+2. **Context Selection**: Choose the appropriate context type (folder, snippet, or device) for your configuration objects.
+3. **Object Identification**: Determine which objects need to be cloned and their dependencies.
+4. **Cloning Operations**: Use the appropriate commands to clone objects in the correct dependency order.
+5. **Commit Changes**: Use the `--commit-and-push` option to apply changes to the destination tenant.
+6. **Verification**: Confirm that all configurations have been successfully cloned and committed.
+
+For a complete end-to-end example of migrating an entire tenant's configuration, see the [Complete Tenant Migration Workflow](python/examples.md#complete-tenant-migration-workflow) in the Examples section.
 
 ## Next Steps
 
