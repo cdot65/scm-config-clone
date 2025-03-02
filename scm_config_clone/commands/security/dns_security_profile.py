@@ -214,11 +214,11 @@ def dns_security_profiles(
     exclude_folders_list = parse_csv_option(exclude_folders)
     exclude_snippets_list = parse_csv_option(exclude_snippets)
     exclude_devices_list = parse_csv_option(exclude_devices)
-    
+
     # Resolve parameters (prioritize new over legacy)
     resolved_source = context_source_name or source_folder
     resolved_destination = context_destination_name or destination_folder
-    
+
     # Prompt if still None after resolution
     if resolved_source is None:
         resolved_source = typer.prompt(
@@ -268,7 +268,7 @@ def dns_security_profiles(
     # Retrieve DNS security profile objects from source
     try:
         source_profile_api = DNSSecurityProfile(source_client, max_limit=5000)
-        
+
         # Call list() with different parameters based on context
         list_params = {
             "exact_match": True,
@@ -276,15 +276,15 @@ def dns_security_profiles(
             "exclude_snippets": exclude_snippets_list,
             "exclude_devices": exclude_devices_list,
         }
-        
+
         # Add context-specific parameter
         if context_type == "folder":
             list_params["folder"] = resolved_source
         else:  # context == "snippet"
             list_params["snippet"] = resolved_source
-            
+
         source_objects = source_profile_api.list(**list_params)
-        
+
         logger.info(
             f"Retrieved {len(source_objects)} DNS security profile objects from source {context_type} '{resolved_source}'."
         )
@@ -295,7 +295,7 @@ def dns_security_profiles(
     # Retrieve DNS security profile objects from destination
     try:
         destination_client_api = DNSSecurityProfile(destination_client, max_limit=5000)
-        
+
         # Different API call based on context type
         if context_type == "folder":
             destination_objects = destination_client_api.list(

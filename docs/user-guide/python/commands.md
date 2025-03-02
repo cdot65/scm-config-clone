@@ -88,6 +88,7 @@ available commands and their primary purposes.
 | hip-objects            | Clone HIP objects                       |
 | services               | Clone services                          |
 | service-groups         | Clone service groups                    |
+| syslog-server-profiles | Clone syslog server profiles            |
 | tags                   | Clone tag objects                       |
 | anti-spyware-profiles  | Clone anti-spyware profiles             |
 | decryption-profiles    | Clone decryption profiles               |
@@ -96,6 +97,12 @@ available commands and their primary purposes.
 | url-categories         | Clone URL categories                    |
 | vulnerability-profiles | Clone vulnerability protection profiles |
 | wildfire-profiles      | Clone Wildfire AV profiles              |
+
+### Deployment Services
+
+| Command                | Description                             |
+|------------------------|-----------------------------------------|
+| remote-networks        | Clone remote network objects            |
 
 **Common Flags and Arguments:**
 

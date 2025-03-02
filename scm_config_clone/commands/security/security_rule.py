@@ -235,11 +235,11 @@ def security_rules(
     exclude_folders_list = parse_csv_option(exclude_folders)
     exclude_snippets_list = parse_csv_option(exclude_snippets)
     exclude_devices_list = parse_csv_option(exclude_devices)
-    
+
     # Resolve parameters (prioritize new over legacy)
     resolved_source = context_source_name or source_folder
     resolved_destination = context_destination_name or destination_folder
-    
+
     # Prompt if still None after resolution
     if resolved_source is None:
         resolved_source = typer.prompt(
@@ -289,7 +289,7 @@ def security_rules(
     # Retrieve security rules from source
     try:
         source_rules_api = SecurityRule(source_client, max_limit=5000)
-        
+
         # Call list() with different parameters based on context
         list_params = {
             "rulebase": rulebase,
@@ -298,15 +298,15 @@ def security_rules(
             "exclude_snippets": exclude_snippets_list,
             "exclude_devices": exclude_devices_list,
         }
-        
+
         # Add context-specific parameter
         if context_type == "folder":
             list_params["folder"] = resolved_source
         else:  # context == "snippet"
             list_params["snippet"] = resolved_source
-            
+
         source_objects = source_rules_api.list(**list_params)
-        
+
         logger.info(
             f"Retrieved {len(source_objects)} security rules from source {context_type} '{resolved_source}'."
         )
@@ -317,7 +317,7 @@ def security_rules(
     # Retrieve security rules from destination
     try:
         destination_rules_api = SecurityRule(destination_client, max_limit=5000)
-        
+
         # Different API call based on context type
         if context_type == "folder":
             destination_objects = destination_rules_api.list(

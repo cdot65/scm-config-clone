@@ -13,6 +13,8 @@ rules, services) with different filters and runtime overrides.
 - [Cloning Tags](#cloning-tags)
 - [Cloning Services](#cloning-services)
 - [Cloning Security Rules](#cloning-security-rules)
+- [Cloning Remote Networks](#cloning-remote-networks)
+- [Cloning Syslog Server Profiles](#cloning-syslog-server-profiles)
 - [Advanced Examples](#advanced-examples)
 
 ## Overview
@@ -181,6 +183,157 @@ To automatically approve and commit the changes:
 scm-clone security-rules --source-folder "cdot65" --rulebase "pre" -A --commit-and-push
 ```
 </div>
+
+## Cloning Remote Networks
+
+Remote Networks are a key component of SASE deployments. After setting up your `settings.yaml` file with proper SASE credentials, you can use the following commands to clone Remote Network objects between tenants.
+
+**Basic cloning of remote networks from a source folder:**
+
+<div class="termy">
+<!-- termynal -->
+```bash
+scm-clone remote-networks --source "Remote Networks"
+```
+</div>
+
+This will list all remote networks in the source folder, prompting for confirmation before cloning.
+
+**Specifying both source and destination folders:**
+
+<div class="termy">
+<!-- termynal -->
+```bash
+scm-clone remote-networks --source "Remote Networks" --destination "Branch Offices"
+```
+</div>
+
+This retrieves remote networks from "Remote Networks" folder in the source tenant and creates them in the "Branch Offices" folder in the destination tenant.
+
+**Excluding specific folders and auto-approving:**
+
+<div class="termy">
+<!-- termynal -->
+```bash
+scm-clone remote-networks --source "Remote Networks" --exclude-folders "Deprecated,Testing" -A
+```
+</div>
+
+This excludes any remote networks in the "Deprecated" and "Testing" folders, and skips confirmation prompts.
+
+**Running a dry run with automatic commit after creation:**
+
+<div class="termy">
+<!-- termynal -->
+```bash
+scm-clone remote-networks --source "Remote Networks" -D --commit-and-push
+```
+</div>
+
+This will simulate the creation without applying changes. Note that `--commit-and-push` has no effect during a dry run.
+
+**Complete example with reporting and commit:**
+
+<div class="termy">
+<!-- termynal -->
+```bash
+scm-clone remote-networks --source "Remote Networks" --destination "Production" --exclude-folders "Testing" -A -R --commit-and-push
+```
+</div>
+
+This command:
+- Retrieves remote networks from "Remote Networks" folder, excluding any in the "Testing" folder
+- Creates them in the "Production" folder in the destination tenant
+- Auto-approves without prompting for confirmation
+- Creates/appends results to result.csv
+- Commits changes to the destination tenant after successful creation
+
+## Cloning Syslog Server Profiles
+
+Syslog server profiles define configurations for forwarding logs to external syslog servers. The following examples demonstrate how to clone these configurations between SCM tenants.
+
+**Basic cloning of syslog server profiles from a source folder:**
+
+<div class="termy">
+<!-- termynal -->
+```bash
+scm-clone syslog-server-profiles --source "Logging"
+```
+</div>
+
+This lists all syslog server profiles in the source folder and prompts for confirmation before cloning.
+
+**Using a specific context type and folder:**
+
+<div class="termy">
+<!-- termynal -->
+```bash
+scm-clone syslog-server-profiles --context folder --source "Logging" --destination "Security" 
+```
+</div>
+
+This explicitly specifies that we're working with folders, retrieves profiles from the "Logging" folder, and creates them in the "Security" folder.
+
+**Working with snippets instead of folders:**
+
+<div class="termy">
+<!-- termynal -->
+```bash
+scm-clone syslog-server-profiles --context snippet --source "logging-snippet" --destination "security-snippet"
+```
+</div>
+
+This retrieves profiles from a source snippet and creates them in a destination snippet, instead of working with folders.
+
+**Excluding specific profiles and auto-approving:**
+
+<div class="termy">
+<!-- termynal -->
+```bash
+scm-clone syslog-server-profiles --source "Logging" --exclude-folders "Test,Development" -A
+```
+</div>
+
+This excludes profiles from the "Test" and "Development" folders, automatically proceeding without confirmation.
+
+**Performing a dry run:**
+
+<div class="termy">
+<!-- termynal -->
+```bash
+scm-clone syslog-server-profiles --source "Logging" -D
+```
+</div>
+
+This simulates the cloning operation without making any changes, showing what would be created.
+
+**Creating a report, committing changes, and enabling quiet mode:**
+
+<div class="termy">
+<!-- termynal -->
+```bash
+scm-clone syslog-server-profiles --source "Logging" --destination "Production" -A -R -Q --commit-and-push
+```
+</div>
+
+This command:
+- Retrieves syslog server profiles from the "Logging" folder
+- Creates them in the "Production" folder
+- Auto-approves without prompting for confirmation
+- Creates/appends results to result.csv
+- Runs in quiet mode with minimal console output
+- Commits changes after successful creation
+
+**Debugging issues with verbose logging:**
+
+<div class="termy">
+<!-- termynal -->
+```bash
+scm-clone syslog-server-profiles --source "Logging" --logging-level DEBUG
+```
+</div>
+
+This increases the logging level to DEBUG to help diagnose any issues that might occur during the cloning process.
 
 ## Advanced Examples
 

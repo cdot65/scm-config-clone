@@ -1,11 +1,11 @@
-# scm_config_clone/commands/network/nat_rule.py
+# scm_config_clone/commands/objects/syslog_server_profile.py
 
 import logging
 from typing import List, Optional, Any, Dict
 
 import typer
 from scm.client import Scm
-from scm.config.network import NatRule
+from scm.config.objects import SyslogServerProfile
 from scm.exceptions import (
     AuthenticationError,
     InvalidObjectError,
@@ -13,7 +13,10 @@ from scm.exceptions import (
     NameNotUniqueError,
     ObjectNotPresentError,
 )
-from scm.models.network.nat_rules import NatRuleCreateModel, NatRuleResponseModel
+from scm.models.objects import (
+    SyslogServerProfileCreateModel,
+    SyslogServerProfileResponseModel,
+)
 from tabulate import tabulate
 
 from scm_config_clone.utilities import (
@@ -24,53 +27,52 @@ from scm_config_clone.utilities import (
 
 
 def build_create_params(
-    src_obj: NatRuleResponseModel,
+    src_obj: SyslogServerProfileResponseModel,
     destination: str,
     context_type: str = "folder",
 ) -> Dict[str, Any]:
     """
-    Construct the dictionary of parameters required to create a new NAT rule.
+    Construct the dictionary of parameters required to create a new syslog server profile object.
 
-    Given an existing NatRuleResponseModel (source object), a destination folder or snippet,
-    and an optional context type, this function builds a dictionary with all necessary fields for creating
-    a new NAT rule in the destination tenant.
+    Given an existing SyslogServerProfileResponseModel (source object), a destination folder or snippet,
+    and an optional context type, this function builds a dictionary with all necessary fields
+    for creating a new syslog server profile in the destination tenant.
 
     Args:
-        src_obj: The NatRuleResponseModel representing the source NAT rule.
+        src_obj: The SyslogServerProfileResponseModel representing the source syslog server profile object.
         destination: The folder or snippet in the destination tenant where the object should be created.
         context_type: The type of destination context (folder/snippet). Defaults to "folder".
 
     Returns:
-        A dictionary containing the fields required for `NatRule.create()`.
-        This dictionary is validated and pruned by NatRuleCreateModel.
+        A dictionary containing the fields required for `SyslogServerProfile.create()`.
+        This dictionary is validated and pruned by SyslogServerProfileCreateModel.
+
+    Raises:
+        ValueError: If the source object does not contain required fields.
     """
     data = {
         "name": src_obj.name,
         context_type: destination,
-        "description": src_obj.description if src_obj.description is not None else None,
-        "disabled": src_obj.disabled,
-        "nat_type": src_obj.nat_type,
-        "from_": src_obj.from_,
-        "to_": src_obj.to_,
-        "source": src_obj.source,
-        "destination": src_obj.destination,
-        "service": src_obj.service if src_obj.service is not None else None,
-        "source_translation": (
-            src_obj.source_translation
-            if src_obj.source_translation is not None
+        "description": (
+            src_obj.description
+            if hasattr(src_obj, "description") and src_obj.description is not None
             else None
         ),
-        "tag": src_obj.tag if src_obj.tag else [],
+        "servers": src_obj.servers,
     }
 
-    create_model = NatRuleCreateModel(**data)
+    # Add format configuration if it exists
+    if hasattr(src_obj, "format") and src_obj.format is not None:
+        data["format"] = src_obj.format
+
+    create_model = SyslogServerProfileCreateModel(**data)
     return create_model.model_dump(
         exclude_unset=True,
         exclude_none=True,
     )
 
 
-def nat_rules(
+def syslog_server_profiles(
     context_type: str = typer.Option(
         "folder",
         "--context",
@@ -115,7 +117,7 @@ def nat_rules(
     commit_and_push: bool = typer.Option(
         False,
         "--commit-and-push",
-        help="If set, commit the changes on the destination tenant after NAT rule creation.",
+        help="If set, commit the changes on the destination tenant after object creation.",
         is_flag=True,
     ),
     auto_approve: bool = typer.Option(
@@ -159,8 +161,43 @@ def nat_rules(
         help="Path to the YAML settings file containing tenant credentials and configuration.",
     ),
 ):
+    """
+    Clone syslog server profile objects from a source SCM tenant to a destination SCM tenant.
 
-    typer.echo("🚀 Starting NAT rules cloning...")
+    This Typer CLI command automates the process of retrieving syslog server profile objects
+    from a specified folder in a source tenant, optionally filters them out based
+    on user-defined exclusion criteria, and then creates them in a destination tenant.
+
+    The workflow is:
+    1. Load authentication and configuration settings (e.g., credentials, logging) from the YAML file.
+    2. If any runtime flags are provided, they override the corresponding settings from the file.
+    3. Authenticate to the source tenant and retrieve syslog server profile objects from the given folder.
+    4. Display the retrieved source objects. If not auto-approved, prompt the user before proceeding.
+    5. Authenticate to the destination tenant and create the retrieved objects there.
+    6. If `--commit-and-push` is provided and objects were created successfully, commit the changes.
+    7. Display the results, including successfully created objects and any errors.
+
+    Args:
+        context_type: Specifies whether to work with folders or snippets.
+        context_source_name: Name of source folder/snippet to retrieve objects from.
+        context_destination_name: Name of destination folder/snippet to create objects in.
+        source_folder: [DEPRECATED] The source folder from which to retrieve objects.
+        destination_folder: [DEPRECATED] The destination folder from which to push objects.
+        exclude_folders: Comma-separated folder names to exclude from source retrieval.
+        exclude_snippets: Comma-separated snippet names to exclude from source retrieval.
+        exclude_devices: Comma-separated device names to exclude from source retrieval.
+        commit_and_push: If True, commit changes in the destination tenant after creation.
+        auto_approve: If True or set in settings, skip the confirmation prompt before creating objects.
+        create_report: If True or set in settings, create/append a CSV file with task results.
+        dry_run: If True or set in settings, perform a dry run without applying changes.
+        quiet_mode: If True or set in settings, hide console output except log messages.
+        logging_level: If provided, override the logging level from settings.yaml.
+        settings_file: Path to the YAML settings file for loading authentication and configuration.
+
+    Raises:
+        typer.Exit: Exits if authentication fails, retrieval fails, or if the user opts not to proceed.
+    """
+    typer.echo("🚀 Starting syslog server profile objects cloning...")
 
     # Load settings from file
     settings = load_settings(settings_file)
@@ -236,9 +273,9 @@ def nat_rules(
         logger.error(f"Unexpected error with destination authentication: {e}")
         raise typer.Exit(code=1)
 
-    # Retrieve NAT rules from source
+    # Retrieve syslog server profile objects from source
     try:
-        source_nat_api = NatRule(source_client, max_limit=5000)
+        source_profile_api = SyslogServerProfile(source_client, max_limit=5000)
 
         # Call list() with different parameters based on context
         list_params = {
@@ -254,22 +291,24 @@ def nat_rules(
         else:  # context == "snippet"
             list_params["snippet"] = resolved_source
 
-        source_objects = source_nat_api.list(**list_params)
+        source_objects = source_profile_api.list(**list_params)
 
         logger.info(
-            f"Retrieved {len(source_objects)} NAT rules from source {context_type} '{resolved_source}'."
+            f"Retrieved {len(source_objects)} syslog server profile objects from source {context_type} '{resolved_source}'."
         )
     except Exception as e:
-        logger.error(f"Error retrieving NAT rules from source: {e}")
+        logger.error(f"Error retrieving syslog server profile objects from source: {e}")
         raise typer.Exit(code=1)
 
-    # Retrieve NAT rules from destination
+    # Retrieve syslog server profile objects from destination
     try:
-        destination_client_api = NatRule(destination_client, max_limit=5000)
+        destination_profile_api = SyslogServerProfile(
+            destination_client, max_limit=5000
+        )
 
         # Different API call based on context type
         if context_type == "folder":
-            destination_objects = destination_client_api.list(
+            destination_objects = destination_profile_api.list(
                 folder=resolved_destination,
                 exact_match=True,
                 exclude_folders=exclude_folders_list,
@@ -281,7 +320,7 @@ def nat_rules(
             )
         elif context_type == "snippet":
             # Check if the API supports retrieving by snippet directly
-            destination_objects = destination_client_api.list(
+            destination_objects = destination_profile_api.list(
                 snippet=resolved_destination,
                 exact_match=True,
             )
@@ -302,15 +341,15 @@ def nat_rules(
     )
 
     if source_objects and not quiet_mode:
-        addr_table = []
+        profile_table = []
         for result in comparison_results:
             # 'x' if already configured else ''
             status = "x" if result["already_configured"] else ""
-            addr_table.append([result["name"], status])
+            profile_table.append([result["name"], status])
 
         typer.echo(
             tabulate(
-                addr_table,
+                profile_table,
                 headers=["Name", "Destination Status"],
                 tablefmt="fancy_grid",
             )
@@ -319,7 +358,7 @@ def nat_rules(
     # Prompt if not auto-approved and objects exist
     if source_objects and not auto_approve:
         proceed = typer.confirm(
-            "Do you want to proceed with creating these objects in the destination tenant?"
+            "Do you want to proceed with creating these syslog server profiles in the destination tenant?"
         )
         if not proceed:
             typer.echo("Aborting cloning operation.")
@@ -334,15 +373,15 @@ def nat_rules(
         obj for obj in source_objects if obj.name not in already_configured_names
     ]
 
-    # Create NAT rules in destination
-    destination_nat_rules = NatRule(destination_client, max_limit=5000)
-    created_objs: List[NatRuleResponseModel] = []
+    # Create syslog server profile objects in destination
+    destination_profiles = SyslogServerProfile(destination_client, max_limit=5000)
+    created_objs: List[SyslogServerProfileResponseModel] = []
     error_objects: List[List[str]] = []
 
     for src_obj in objects_to_create:
         if dry_run:
             logger.info(
-                f"Skipping creation of NAT rule in destination (dry run): {src_obj.name}"
+                f"Skipping creation of syslog server profile object in destination (dry run): {src_obj.name}"
             )
             continue
 
@@ -350,7 +389,7 @@ def nat_rules(
             with open("result.csv", "a") as f:
                 context_property = "folder" if context_type == "folder" else "snippet"
                 f.write(
-                    f"NatRule,{src_obj.name},{getattr(src_obj, context_property)}\n"
+                    f"SyslogServerProfile,{src_obj.name},{getattr(src_obj, context_property)}\n"
                 )
 
         try:
@@ -364,9 +403,11 @@ def nat_rules(
             continue
 
         try:
-            new_obj = destination_nat_rules.create(create_params)
+            new_obj = destination_profiles.create(create_params)
             created_objs.append(new_obj)
-            logger.info(f"Created NAT rule in destination: {new_obj.name}")
+            logger.info(
+                f"Created syslog server profile object in destination: {new_obj.name}"
+            )
         except (
             InvalidObjectError,
             MissingQueryParameterError,
@@ -388,7 +429,9 @@ def nat_rules(
 
     # Display results if not quiet_mode
     if created_objs and not quiet_mode:
-        typer.echo("\nSuccessfully created the following NAT rules:")
+        typer.echo(
+            "\nSuccessfully created the following syslog server profile objects:"
+        )
         created_table = []
         for obj in created_objs:
             created_table.append([obj.name])
@@ -402,7 +445,7 @@ def nat_rules(
         )
 
     if error_objects and not quiet_mode:
-        typer.echo("\nSome NAT rules failed to be created:")
+        typer.echo("\nSome syslog server profile objects failed to be created:")
         typer.echo(
             tabulate(
                 error_objects,
@@ -416,16 +459,19 @@ def nat_rules(
         try:
             commit_params = {
                 "folders": [resolved_destination],
-                "description": f"Cloned NAT rules from {context_type} {resolved_source}",
+                "description": f"Cloned syslog server profile objects from {context_type} {resolved_source}",
                 "sync": True,
             }
-            result = destination_nat_rules.commit(**commit_params)
-            job_status = destination_nat_rules.get_job_status(result.job_id)
+
+            result = destination_profiles.commit(**commit_params)
+            job_status = destination_profiles.get_job_status(result.job_id)
             logger.info(
                 f"Commit job ID {result.job_id} status: {job_status.data[0].status_str}"
             )
         except Exception as e:
-            logger.error(f"Error committing NAT rules in destination: {e}")
+            logger.error(
+                f"Error committing syslog server profile objects in destination: {e}"
+            )
             raise typer.Exit(code=1)
     elif commit_and_push and created_objs and context_type == "snippet":
         logger.info(
@@ -437,6 +483,8 @@ def nat_rules(
                 "Objects created, but --commit-and-push not specified, skipping commit."
             )
         else:
-            logger.info("No new NAT rules were created, skipping commit.")
+            logger.info(
+                "No new syslog server profile objects were created, skipping commit."
+            )
 
-    typer.echo("🎉 NatRule objects cloning completed successfully! 🎉")
+    typer.echo("🎉 Syslog server profile objects cloning completed successfully! 🎉")

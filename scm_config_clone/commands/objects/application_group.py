@@ -211,11 +211,11 @@ def application_groups(
     exclude_folders_list = parse_csv_option(exclude_folders)
     exclude_snippets_list = parse_csv_option(exclude_snippets)
     exclude_devices_list = parse_csv_option(exclude_devices)
-    
+
     # Resolve parameters (prioritize new over legacy)
     resolved_source = context_source_name or source_folder
     resolved_destination = context_destination_name or destination_folder
-    
+
     # Prompt if still None after resolution
     if resolved_source is None:
         resolved_source = typer.prompt(
@@ -361,7 +361,9 @@ def application_groups(
     ]
 
     # Create application group objects in destination
-    destination_application_groups = ApplicationGroup(destination_client, max_limit=5000)
+    destination_application_groups = ApplicationGroup(
+        destination_client, max_limit=5000
+    )
     created_objs: List[ApplicationGroupResponseModel] = []
     error_objects: List[List[str]] = []
 

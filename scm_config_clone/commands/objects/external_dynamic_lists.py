@@ -218,11 +218,11 @@ def external_dynamic_lists(
     exclude_folders_list = parse_csv_option(exclude_folders)
     exclude_snippets_list = parse_csv_option(exclude_snippets)
     exclude_devices_list = parse_csv_option(exclude_devices)
-    
+
     # Resolve parameters (prioritize new over legacy)
     resolved_source = context_source_name or source_folder
     resolved_destination = context_destination_name or destination_folder
-    
+
     # Prompt if still None after resolution
     if resolved_source is None:
         resolved_source = typer.prompt(
@@ -298,7 +298,9 @@ def external_dynamic_lists(
 
     # Retrieve EDL objects from destination
     try:
-        destination_client_api = ExternalDynamicLists(destination_client, max_limit=5000)
+        destination_client_api = ExternalDynamicLists(
+            destination_client, max_limit=5000
+        )
 
         # Different API call based on context type
         if context_type == "folder":
@@ -382,9 +384,7 @@ def external_dynamic_lists(
         if create_report:
             with open("result.csv", "a") as f:
                 context_property = "folder" if context_type == "folder" else "snippet"
-                f.write(
-                    f"EDL,{src_obj.name},{getattr(src_obj, context_property)}\n"
-                )
+                f.write(f"EDL,{src_obj.name},{getattr(src_obj, context_property)}\n")
 
         try:
             create_params = build_create_params(
