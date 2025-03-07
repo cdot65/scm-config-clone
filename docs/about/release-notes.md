@@ -7,10 +7,21 @@ enhancements, and fixes in each version of the tool.
 
 ## Version 0.3.0
 
-**Release Date:** March 2, 2025
+**Release Date:** March 7, 2025
 
 ### New Features
 
+- **VPN Configuration Support**:
+  - Added support for IKE crypto profiles
+  - Added support for IKE gateways
+  - Added support for IPsec crypto profiles
+  - Enhanced documentation with detailed examples for VPN cloning
+
+- **Usability Improvements**:
+  - Improved table output for VPN configuration display
+  - Better handling of complex nested configurations
+  - Enhanced error handling for configuration dependencies
+- 
 - **Expanded Command Set**:
   - Added support for syslog server profiles
   - Added support for SASE remote networks

@@ -1,6 +1,9 @@
 # scm_config_clone/__init__.py
 
 from .commands.deployments.remote_networks import remote_networks
+from .commands.network.ike_crypto_profile import clone as ike_crypto_profiles
+from .commands.network.ike_gateway import clone as ike_gateways
+from .commands.network.ipsec_crypto_profile import clone as ipsec_crypto_profiles
 from .commands.network.nat_rule import nat_rules
 from .commands.objects.address import addresses
 from .commands.objects.address_group import address_groups

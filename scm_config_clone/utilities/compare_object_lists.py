@@ -28,3 +28,22 @@ def compare_object_lists(source_objects: list, destination_objects: list) -> lis
         )
 
     return results
+
+
+def find_missing_objects(source_objects: list, destination_objects: list, name_attribute: str = 'name') -> list:
+    """
+    Compare two lists of objects and return the source objects that are not present in the destination.
+
+    Args:
+        source_objects: A list of objects from the source.
+        destination_objects: A list of objects from the destination.
+        name_attribute: The attribute to use for comparison (default: 'name').
+
+    Returns:
+        A list of source objects that are not present in the destination.
+    """
+    # Create a set of names from the destination for O(1) lookups
+    destination_names = {getattr(obj, name_attribute) for obj in destination_objects}
+    
+    # Return objects from source that are not in destination
+    return [obj for obj in source_objects if getattr(obj, name_attribute) not in destination_names]

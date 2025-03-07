@@ -27,7 +27,7 @@ The tool supports cloning various types of configurations:
 
 1. **Objects**: Address objects, address groups, applications, tags, services, service groups, HIP objects, and many more.
 2. **Security Services**: Security rules, URL categories, anti-spyware profiles, decryption profiles, and other security-related configurations.
-3. **Network Services**: NAT rules and related network configurations.
+3. **Network Services**: NAT rules, IKE & IPsec VPN configurations, and related network objects.
 4. **Deployment Services**: Remote network objects and other deployment-related configurations.
 
 For a complete list of supported commands, see the [Commands Reference](python/commands.md).
