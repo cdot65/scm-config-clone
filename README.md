@@ -25,7 +25,7 @@ streamlines migration tasks and reduces manual errors.
 ## Features
 
 - **Simple Setup**: Store credentials and defaults in a `settings.yaml` file for reuse.
-- **Robust Cloning**: Supports multiple object types (addresses, tags, services, security rules, and more).
+- **Robust Cloning**: Supports multiple object types (addresses, tags, services, security rules, IKE & IPsec VPN configurations, and more).
 - **Extensive Filters**: Exclude specific folders, snippets, or devices to narrow down cloned objects.
 - **Flexible Controls**: Run in `dry-run` mode, auto-approve changes, suppress console output, and create reports.
 - **Commit & Push**: Automatically commit changes after objects are cloned.

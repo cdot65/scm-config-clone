@@ -34,6 +34,7 @@ from scm_config_clone import (
     hip_objects,
     hip_profiles,
     http_server_profiles,
+    ike_crypto_profiles,
     log_forwarding_profiles,
     nat_rules,
     quarantined_devices,
@@ -234,6 +235,28 @@ app.command(
     name="wildfire-profiles",
     help="Clone Wildfire AV profiles.",
 )(wildfire_antivirus_profiles)
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Network Services
+# ---------------------------------------------------------------------------------------------------------------------
+
+# IKE Crypto Profiles
+app.command(
+    name="ike-crypto-profiles",
+    help="Clone IKE crypto profiles.",
+)(ike_crypto_profiles)
+
+# IKE Gateways
+app.command(
+    name="ike-gateways",
+    help="Clone IKE gateways.",
+)(ike_gateways)
+
+# IPsec Crypto Profiles
+app.command(
+    name="ipsec-crypto-profiles",
+    help="Clone IPsec crypto profiles.",
+)(ipsec_crypto_profiles)
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Deployments

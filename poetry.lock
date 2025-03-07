@@ -438,14 +438,14 @@ doc = ["Sphinx", "sphinx-rtd-theme", "sphinxcontrib-spelling"]
 
 [[package]]
 name = "faker"
-version = "36.1.1"
+version = "37.0.0"
 description = "Faker is a Python package that generates fake data for you."
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "Faker-36.1.1-py3-none-any.whl", hash = "sha256:ad1f1be7fd692ec0256517404a9d7f007ab36ac5d4674082fa72404049725eaa"},
-    {file = "faker-36.1.1.tar.gz", hash = "sha256:7cb2bbd4c8f040e4a340ae4019e9a48b6cf1db6a71bda4e5a61d8d13b7bef28d"},
+    {file = "faker-37.0.0-py3-none-any.whl", hash = "sha256:2598f78b76710a4ed05e197dda5235be409b4c291ba5c9c7514989cfbc7a5144"},
+    {file = "faker-37.0.0.tar.gz", hash = "sha256:d2e4e2a30d459a8ec0ae52a552aa51c48973cb32cf51107dee90f58a8322a880"},
 ]
 
 [package.dependencies]
@@ -574,14 +574,14 @@ testing = ["Django", "attrs", "colorama", "docopt", "pytest (<9.0.0)"]
 
 [[package]]
 name = "jinja2"
-version = "3.1.5"
+version = "3.1.6"
 description = "A very fast and expressive template engine."
 optional = false
 python-versions = ">=3.7"
 groups = ["dev"]
 files = [
-    {file = "jinja2-3.1.5-py3-none-any.whl", hash = "sha256:aba0f4dc9ed8013c424088f68a5c226f7d6097ed89b246d7749c2ec4175c6adb"},
-    {file = "jinja2-3.1.5.tar.gz", hash = "sha256:8fefff8dc3034e27bb80d67c671eb8a9bc424c0ef4c0826edbff304cceff43bb"},
+    {file = "jinja2-3.1.6-py3-none-any.whl", hash = "sha256:85ece4451f492d0c13c5dd7c13a64681a86afae63a5f347908daf103ce6d2f67"},
+    {file = "jinja2-3.1.6.tar.gz", hash = "sha256:0137fb05990d35f1275a587e9aee6d56da821fc83491a0fb838183be43f66d6d"},
 ]
 
 [package.dependencies]
@@ -820,14 +820,14 @@ pyyaml = ">=5.1"
 
 [[package]]
 name = "mkdocs-material"
-version = "9.6.6"
+version = "9.6.7"
 description = "Documentation that simply works"
 optional = false
 python-versions = ">=3.8"
 groups = ["dev"]
 files = [
-    {file = "mkdocs_material-9.6.6-py3-none-any.whl", hash = "sha256:904c422ec86086144495831cee2614bb8a0092572ef579af6392b8080309d3a3"},
-    {file = "mkdocs_material-9.6.6.tar.gz", hash = "sha256:06141bd720b0b235829bd59e8afc11d5587c35ae7fc340612d2b3f554e6a69d8"},
+    {file = "mkdocs_material-9.6.7-py3-none-any.whl", hash = "sha256:8a159e45e80fcaadd9fbeef62cbf928569b93df954d4dc5ba76d46820caf7b47"},
+    {file = "mkdocs_material-9.6.7.tar.gz", hash = "sha256:3e2c1fceb9410056c2d91f334a00cdea3215c28750e00c691c1e46b2a33309b4"},
 ]
 
 [package.dependencies]
@@ -1011,14 +1011,14 @@ lint = ["black"]
 
 [[package]]
 name = "pan-scm-sdk"
-version = "0.3.15"
+version = "0.3.17"
 description = "Python SDK for Palo Alto Networks Strata Cloud Manager."
 optional = false
 python-versions = "<4.0,>=3.10"
 groups = ["main"]
 files = [
-    {file = "pan_scm_sdk-0.3.15-py3-none-any.whl", hash = "sha256:6ac42c419e6e3df776d63527cefe04d90556a7e3fd6866797aff5edcff5d74db"},
-    {file = "pan_scm_sdk-0.3.15.tar.gz", hash = "sha256:9c7b6f47e622bfa37431feb8eb812204b29761593fd75e0027ccc7ad0244bb4e"},
+    {file = "pan_scm_sdk-0.3.17-py3-none-any.whl", hash = "sha256:9b1e515cb22eecf24c62632a59f5a584030103f95a28b75c84f6df6db18fdb93"},
+    {file = "pan_scm_sdk-0.3.17.tar.gz", hash = "sha256:32da3bdfdc95ef4ff27d50fe9cdbc06ad8d280bd68280989f8128e2ecfa8400e"},
 ]
 
 [package.dependencies]
@@ -1923,4 +1923,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "e5bd291f9d7f010b03668cb2193ac32526a4a9edc7b7ca929e7d21b7a4d1592b"
+content-hash = "418ea8aee6bfa91ac9480aab3ec58823732aa2ce870b567c5904018a61605d64"

@@ -15,6 +15,9 @@ rules, services) with different filters and runtime overrides.
 - [Cloning Security Rules](#cloning-security-rules)
 - [Cloning Remote Networks](#cloning-remote-networks)
 - [Cloning Syslog Server Profiles](#cloning-syslog-server-profiles)
+- [Cloning IKE Crypto Profiles](#cloning-ike-crypto-profiles)
+- [Cloning IKE Gateways](#cloning-ike-gateways)
+- [Cloning IPsec Crypto Profiles](#cloning-ipsec-crypto-profiles)
 - [Other Supported Commands](#other-supported-commands)
 - [Advanced Examples](#advanced-examples)
 
@@ -336,6 +339,231 @@ scm-clone syslog-server-profiles --source "Logging" --logging-level DEBUG
 
 This increases the logging level to DEBUG to help diagnose any issues that might occur during the cloning process.
 
+## Cloning IKE Crypto Profiles
+
+IKE Crypto Profiles define the encryption, authentication, and key exchange parameters used for IPsec VPN tunnels. The following examples demonstrate how to clone these profiles between SCM tenants.
+
+**Basic cloning of IKE crypto profiles from a source folder:**
+
+<div class="termy">
+<!-- termynal -->
+```bash
+scm-clone ike-crypto-profiles --source-folder "VPN"
+```
+</div>
+
+This lists all IKE crypto profiles in the source folder and prompts for confirmation before cloning.
+
+**Specifying both source and destination folders:**
+
+<div class="termy">
+<!-- termynal -->
+```bash
+scm-clone ike-crypto-profiles --source-folder "VPN" --destination-folder "VPN-Profiles"
+```
+</div>
+
+This retrieves IKE crypto profiles from the "VPN" folder and creates them in the "VPN-Profiles" folder in the destination tenant.
+
+**Using snippets instead of folders:**
+
+<div class="termy">
+<!-- termynal -->
+```bash
+scm-clone ike-crypto-profiles --source-snippet "vpn-snippet" --destination-snippet "vpn-profiles-snippet"
+```
+</div>
+
+This retrieves profiles from a source snippet and creates them in a destination snippet.
+
+**Filtering by profile names:**
+
+<div class="termy">
+<!-- termynal -->
+```bash
+scm-clone ike-crypto-profiles --source-folder "VPN" --names "profile1,profile2,profile3"
+```
+</div>
+
+This clones only the specified profiles by name from the source folder.
+
+**Performing a dry run with auto-approve:**
+
+<div class="termy">
+<!-- termynal -->
+```bash
+scm-clone ike-crypto-profiles --source-folder "VPN" --dry-run --auto-approve
+```
+</div>
+
+This simulates the cloning operation without making any changes and skips confirmation prompts.
+
+**Complete example with reporting and commit:**
+
+<div class="termy">
+<!-- termynal -->
+```bash
+scm-clone ike-crypto-profiles --source-folder "VPN" --destination-folder "Production-VPN" --names "aes-256-sha256,aes-gcm-sha384" -y -R --commit-and-push
+```
+</div>
+
+This command:
+- Retrieves only the specified IKE crypto profiles from the "VPN" folder
+- Creates them in the "Production-VPN" folder in the destination tenant
+- Auto-approves without prompting for confirmation
+- Creates/appends results to result.csv
+- Commits changes to the destination tenant after successful creation
+
+## Cloning IKE Gateways
+
+IKE Gateways define the connection points for IPsec VPN tunnels. The following examples demonstrate how to clone these gateway configurations between SCM tenants.
+
+**Basic cloning of IKE gateways from a source folder:**
+
+<div class="termy">
+<!-- termynal -->
+```bash
+scm-clone ike-gateways --source-folder "VPN"
+```
+</div>
+
+This lists all IKE gateways in the source folder and prompts for confirmation before cloning.
+
+**Specifying both source and destination folders:**
+
+<div class="termy">
+<!-- termynal -->
+```bash
+scm-clone ike-gateways --source-folder "VPN" --destination-folder "VPN-Gateways"
+```
+</div>
+
+This retrieves IKE gateways from the "VPN" folder and creates them in the "VPN-Gateways" folder in the destination tenant.
+
+**Using snippets instead of folders:**
+
+<div class="termy">
+<!-- termynal -->
+```bash
+scm-clone ike-gateways --source-snippet "vpn-snippet" --destination-snippet "vpn-gateways-snippet"
+```
+</div>
+
+This retrieves gateways from a source snippet and creates them in a destination snippet.
+
+**Filtering by gateway names:**
+
+<div class="termy">
+<!-- termynal -->
+```bash
+scm-clone ike-gateways --source-folder "VPN" --names "gateway1,gateway2,gateway3"
+```
+</div>
+
+This clones only the specified gateways by name from the source folder.
+
+**Performing a dry run with auto-approve:**
+
+<div class="termy">
+<!-- termynal -->
+```bash
+scm-clone ike-gateways --source-folder "VPN" --dry-run --auto-approve
+```
+</div>
+
+This simulates the cloning operation without making any changes and skips confirmation prompts.
+
+**Complete example with reporting and commit:**
+
+<div class="termy">
+<!-- termynal -->
+```bash
+scm-clone ike-gateways --source-folder "VPN" --destination-folder "Production-VPN" --names "site-a-gateway,site-b-gateway" -y -R --commit-and-push
+```
+</div>
+
+This command:
+- Retrieves only the specified IKE gateways from the "VPN" folder
+- Creates them in the "Production-VPN" folder in the destination tenant
+- Auto-approves without prompting for confirmation
+- Creates/appends results to result.csv
+- Commits changes to the destination tenant after successful creation
+
+## Cloning IPsec Crypto Profiles
+
+IPsec Crypto Profiles define the encryption, authentication, and other security parameters used for IPsec VPN tunnels. The following examples demonstrate how to clone these profiles between SCM tenants.
+
+**Basic cloning of IPsec crypto profiles from a source folder:**
+
+<div class="termy">
+<!-- termynal -->
+```bash
+scm-clone ipsec-crypto-profiles --source-folder "VPN"
+```
+</div>
+
+This lists all IPsec crypto profiles in the source folder and prompts for confirmation before cloning.
+
+**Specifying both source and destination folders:**
+
+<div class="termy">
+<!-- termynal -->
+```bash
+scm-clone ipsec-crypto-profiles --source-folder "VPN" --destination-folder "VPN-Profiles"
+```
+</div>
+
+This retrieves IPsec crypto profiles from the "VPN" folder and creates them in the "VPN-Profiles" folder in the destination tenant.
+
+**Using snippets instead of folders:**
+
+<div class="termy">
+<!-- termynal -->
+```bash
+scm-clone ipsec-crypto-profiles --source-snippet "vpn-snippet" --destination-snippet "vpn-profiles-snippet"
+```
+</div>
+
+This retrieves profiles from a source snippet and creates them in a destination snippet.
+
+**Filtering by profile names:**
+
+<div class="termy">
+<!-- termynal -->
+```bash
+scm-clone ipsec-crypto-profiles --source-folder "VPN" --names "esp-aes-256-sha1,ah-sha-256,esp-gcm-profile"
+```
+</div>
+
+This clones only the specified profiles by name from the source folder.
+
+**Performing a dry run with auto-approve:**
+
+<div class="termy">
+<!-- termynal -->
+```bash
+scm-clone ipsec-crypto-profiles --source-folder "VPN" --dry-run --auto-approve
+```
+</div>
+
+This simulates the cloning operation without making any changes and skips confirmation prompts.
+
+**Complete example with reporting and commit:**
+
+<div class="termy">
+<!-- termynal -->
+```bash
+scm-clone ipsec-crypto-profiles --source-folder "VPN" --destination-folder "Production-VPN" --names "esp-aes-256-gcm,esp-suite-b" -y -R --commit-and-push
+```
+</div>
+
+This command:
+- Retrieves only the specified IPsec crypto profiles from the "VPN" folder
+- Creates them in the "Production-VPN" folder in the destination tenant
+- Auto-approves without prompting for confirmation
+- Creates/appends results to result.csv
+- Commits changes to the destination tenant after successful creation
+
 ## Other Supported Commands
 
 The following commands are also available but not covered in detail in this examples document. They all follow the same pattern and support the same flags and arguments as the commands shown above.
@@ -365,6 +593,9 @@ The following commands are also available but not covered in detail in this exam
 
 ### Network Service Commands
 
+- **ike-crypto-profiles**: Clone IKE crypto profile objects
+- **ike-gateways**: Clone IKE gateway objects
+- **ipsec-crypto-profiles**: Clone IPsec crypto profile objects
 - **nat-rules**: Clone NAT rule objects
 
 To use any of these commands, follow the same patterns shown in the examples above:

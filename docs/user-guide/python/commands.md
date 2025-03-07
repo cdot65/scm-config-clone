@@ -114,6 +114,9 @@ available commands and their primary purposes.
 
 | Command                | Description                             |
 |------------------------|-----------------------------------------|
+| ike-crypto-profiles    | Clone IKE crypto profiles               |
+| ike-gateways           | Clone IKE gateways                      |
+| ipsec-crypto-profiles  | Clone IPsec crypto profiles             |
 | nat-rules              | Clone NAT rules                         |
 
 ### Deployment Services
