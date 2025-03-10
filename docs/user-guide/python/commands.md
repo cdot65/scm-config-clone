@@ -125,22 +125,26 @@ available commands and their primary purposes.
 |------------------------|-----------------------------------------|
 | remote-networks        | Clone remote network objects            |
 
-**Common Flags and Arguments:**
+**Command Parameters:**
 
-| Argument/Flag          | Description                                                                  | Default             |
-|------------------------|------------------------------------------------------------------------------|---------------------|
-| `--source-folder`      | The folder from which to retrieve and clone objects.                         | None (prompted)     |
-| `--destination-folder` | The folder where the cloned objects will be created.                         | None (prompted)     |
-| `--exclude-folders`    | Comma-separated list of folders to exclude from retrieval.                   | None                |
-| `--exclude-snippets`   | Comma-separated list of snippets to exclude from retrieval.                  | None                |
-| `--exclude-devices`    | Comma-separated list of devices to exclude from retrieval.                   | None                |
-| `--commit-and-push`    | If set, commit changes on the destination tenant after creating objects.     | False               |
-| `--auto-approve, -A`   | If set (or configured in settings), skip confirmation prompt before cloning. | Value from settings |
-| `--create-report, -R`  | If set (or configured in settings), append results to `result.csv`.          | Value from settings |
-| `--dry-run, -D`        | If set (or configured in settings), simulate without applying changes.       | Value from settings |
-| `--quiet-mode, -Q`     | If set (or configured in settings), hide console output except logs.         | Value from settings |
-| `--logging-level, -L`  | Override logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL).              | Value from settings |
-| `--settings-file, -s`  | Path to the YAML settings file.                                              | `settings.yaml`     |
+All commands use the **context pattern** with the following parameters:
+
+| Argument/Flag         | Description                                                                  | Default             |
+|-----------------------|------------------------------------------------------------------------------|---------------------|
+| `--context`           | The context type ('folder', 'snippet', or 'device')                          | "folder"            |
+| `--source`            | The source folder/snippet/device from which to retrieve objects              | None (prompted)     |
+| `--destination`       | The destination folder/snippet/device where objects will be created          | None (prompted)     |
+| `--names, -n`         | Comma-separated list of object names to filter                               | None                |
+| `--exclude-folders`   | Comma-separated list of folders to exclude from retrieval                    | None                |
+| `--exclude-snippets`  | Comma-separated list of snippets to exclude from retrieval                   | None                |
+| `--exclude-devices`   | Comma-separated list of devices to exclude from retrieval                    | None                |
+| `--commit-and-push`   | If set, commit changes on the destination tenant after creating objects      | False               |
+| `--auto-approve, -A`  | If set (or in settings), skip confirmation prompt before cloning             | Value from settings |
+| `--create-report, -R` | If set (or in settings), append results to `result.csv`                      | Value from settings |
+| `--dry-run, -D`       | If set (or in settings), simulate without applying changes                   | Value from settings |
+| `--quiet-mode, -Q`    | If set (or in settings), hide console output except logs                     | Value from settings |
+| `--logging-level, -L` | Override logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)               | Value from settings |
+| `--settings-file, -s` | Path to the YAML settings file                                               | `settings.yaml`     |
 
 ## Usage Examples
 
@@ -159,19 +163,26 @@ Below are some real-world scenarios demonstrating how to use `scm-clone` with va
 
    Follow the prompts to provide source/destination credentials and defaults.
 
-2. **Cloning Addresses**:
+2. **Cloning Objects**:
 
-   Once `settings.yaml` is created, you can clone addresses with minimal input:
+   Once `settings.yaml` is created, you can clone objects using the context pattern:
 
    <div class="termy">
    <!-- termynal -->
    ```bash
-   scm-clone addresses --source-folder "Texas"
+   # Clone address objects
+   scm-clone addresses --context folder --source "Texas" --destination "Texas"
+   
+   # Clone IKE crypto profiles
+   scm-clone ike-crypto-profiles --context folder --source "VPN" --destination "VPN"
+   
+   # Clone with snippet context
+   scm-clone addresses --context snippet --source "network-objects" --destination "network-objects"
    ```
    </div>
 
    If `auto_approve` is set to false in settings, you'll be prompted before proceeding. If `quiet_mode` is false, you
-   will see a table of retrieved addresses.
+   will see a table of retrieved objects.
 
 ### Overriding Defaults at Runtime
 
@@ -180,18 +191,26 @@ If you set `auto_approve: false` in `settings.yaml`, you can override it at runt
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone addresses --source-folder "Texas" -A
+# Auto-approve addresses
+scm-clone addresses --context folder --source "Texas" --destination "Texas" -A
+
+# Auto-approve IKE gateways
+scm-clone ike-gateways --context folder --source "VPN" --destination "VPN" -A
 ```
 </div>
 
 This auto-approves changes without prompting.
 
-Similarly, if you want to run in dry-run mode (coming soon):
+Similarly, if you want to run in dry-run mode:
 
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone addresses --source-folder "Texas" -D
+# Dry-run for addresses
+scm-clone addresses --context folder --source "Texas" --destination "Texas" -D
+
+# Dry-run for IPsec crypto profiles
+scm-clone ipsec-crypto-profiles --context folder --source "VPN" --destination "VPN" -D
 ```
 </div>
 
@@ -204,14 +223,21 @@ You can exclude certain folders, snippets, or devices from retrieval:
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone tags --source-folder "Texas" \
+# Filter tags
+scm-clone tags --context folder --source "Texas" --destination "Texas" \
+               --exclude-folders "All,Default" \
+               --exclude-snippets "predefined" \
+               --exclude-devices "DeviceA"
+
+# Filter NAT rules
+scm-clone nat-rules --context folder --source "NAT" --destination "NAT" \
                --exclude-folders "All,Default" \
                --exclude-snippets "predefined" \
                --exclude-devices "DeviceA"
 ```
 </div>
 
-This command retrieves tag objects from `"Texas"`, excluding any from the `"All"` or `"Default"` folders,
+This retrieves objects from the specified context, excluding any from the `"All"` or `"Default"` folders,
 any that come from snippet `"predefined"`, and any associated with `DeviceA`.
 
 ### Commit and Push Changes
@@ -221,11 +247,15 @@ If you want to commit your changes automatically after creation:
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone address-groups --source-folder "Texas" --commit-and-push
+# Commit address groups
+scm-clone address-groups --context folder --source "Texas" --destination "Texas" --commit-and-push
+
+# Commit IKE crypto profiles
+scm-clone ike-crypto-profiles --context folder --source "VPN" --destination "VPN" --commit-and-push
 ```
 </div>
 
-After cloning address groups, this command commits changes to the destination tenant automatically.
+After cloning objects, this command commits changes to the destination tenant automatically.
 
 ### Generating Reports
 

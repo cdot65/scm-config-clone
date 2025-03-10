@@ -10,7 +10,7 @@ readme = "README.md"
 python = "^3.10"
 typer = "^0.15.2"
 setuptools = "^75.8.2"
-pan-scm-sdk = "^0.3.17"
+pan-scm-sdk = "^0.3.18"
 tabulate = "^0.9.0"
 pandas = "^2.2.3"
 pyyaml = "^6.0.2"
@@ -22,12 +22,47 @@ mkdocs = "^1.6.1"
 mkdocs-material = "^9.5.39"
 mkdocstrings = "^0.26.1"
 pytest = "^8.3.3"
+pytest-cov = "^4.1.0"
+pytest-mock = "^3.12.0"
 factory-boy = "^3.3.1"
 termynal = "^0.12.1"
 ipython = "^8.32.0"
 
 [tool.poetry.scripts]
 scm-clone = 'scm_config_clone.main:app'
+
+[tool.black]
+line-length = 120
+
+[tool.isort]
+profile = "black"
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+markers = [
+    "unit: mark a test as a unit test",
+    "integration: mark test as an integration test",
+    "slow: mark test as slow",
+]
+addopts = "--strict-markers --cov=scm_config_clone --cov-report=term --cov-report=html"
+
+[tool.coverage.run]
+source = ["scm_config_clone"]
+omit = ["tests/*", "**/__init__.py"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "pass",
+    "raise ImportError",
+]
 
 [build-system]
 requires = ["poetry-core"]

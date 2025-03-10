@@ -18,6 +18,7 @@ streamlines migration tasks and reduces manual errors.
 - [Basic Usage](#basic-usage)
 - [Creating the Settings File](#creating-the-settings-file)
 - [Cloning Objects](#cloning-objects)
+- [Testing](#testing)
 - [Further Reading](#further-reading)
 - [Contributing](#contributing)
 - [License](#license)
@@ -88,6 +89,28 @@ scm-clone addresses --source-folder "Texas" -D --commit-and-push
 
 This simulates the creation without applying changes (`-D`) and would commit changes if actually applied. Remove `-D` to
 run it for real.
+
+## Testing
+
+The project includes a comprehensive test suite with both unit and integration tests. Tests are written using pytest and use Factory Boy for creating test objects.
+
+To run the tests:
+
+```bash
+# Install development dependencies
+poetry install
+
+# Run all tests with coverage
+./run_tests.sh
+
+# Run only unit tests
+./run_tests.sh unit
+
+# Run only integration tests
+./run_tests.sh integration
+```
+
+For more details about the test suite, see [tests/README.md](tests/README.md).
 
 ## Further Reading
 

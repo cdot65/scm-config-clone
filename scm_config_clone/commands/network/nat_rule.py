@@ -23,6 +23,7 @@ from scm_config_clone.utilities import (
 )
 
 
+
 def build_create_params(
     src_obj: NatRuleResponseModel,
     destination: str,
