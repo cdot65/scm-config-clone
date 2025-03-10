@@ -22,3 +22,22 @@ def parse_csv_option(value: Optional[str]) -> Optional[List[str]]:
     if not value:
         return None
     return [v.strip() for v in value.split(",") if v.strip()]
+
+
+def parse_csv_string(value: str) -> List[str]:
+    """
+    Parse a comma-separated string into a list of stripped strings.
+    
+    This utility function converts a string like "val1,val2,val3"
+    into ["val1", "val2", "val3"]. If the input string is empty,
+    it returns an empty list.
+    
+    Args:
+        value: The string containing comma-separated values.
+        
+    Returns:
+        A list of strings. Returns empty list if input is empty.
+    """
+    if not value:
+        return []
+    return [v.strip() for v in value.split(",") if v.strip()]

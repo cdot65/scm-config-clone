@@ -31,23 +31,30 @@ If needed, you can override any setting at runtime using the provided flags.
 
 ## Flags and Parameters
 
-All commands share a common set of flags that interact with the defaults defined in `settings.yaml`. At runtime, if a
-flag is not provided, the CLI falls back on the values from `settings.yaml`.
+All commands use the **context pattern** with the following format:
 
-| Flag/Option            | Description                                                                                     | Default from YAML |
-|------------------------|-------------------------------------------------------------------------------------------------|-------------------|
-| `--source-folder`      | Folder to focus on when retrieving and cloning objects. If omitted, the CLI will prompt for it. | None              |
-| `--destination-folder` | Folder to create objects in the destination tenant. If omitted, the CLI will prompt for it.     | None              |
-| `--exclude-folders`    | Comma-separated folders to exclude from retrieval.                                              | None              |
-| `--exclude-snippets`   | Comma-separated snippets to exclude from retrieval.                                             | None              |
-| `--exclude-devices`    | Comma-separated devices to exclude from retrieval.                                              | None              |
-| `--commit-and-push`    | Commit changes in the destination tenant after creation if objects are successfully cloned.     | False             |
-| `--auto-approve, -A`   | If set or in `settings.yaml`, skip confirmation prompts before creating objects.                | From settings     |
-| `--create-report, -R`  | If set or in `settings.yaml`, append results to `result.csv` after completion.                  | From settings     |
-| `--dry-run, -D`        | If set or in `settings.yaml`, simulate operations without applying changes.                     | From settings     |
-| `--quiet-mode, -Q`     | If set or in `settings.yaml`, suppress console output except log messages.                      | From settings     |
-| `--logging-level, -L`  | Override the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL).                             | From settings     |
-| `--settings-file, -s`  | Specify a custom `settings.yaml` file path.                                                     | `settings.yaml`   |
+```bash
+scm-clone [command] --context [folder|snippet|device] --source "SourceName" --destination "DestinationName" [options]
+```
+
+### Command Parameters
+
+| Argument/Flag         | Description                                                                  | Default             |
+|-----------------------|------------------------------------------------------------------------------|---------------------|
+| `--context`           | The context type ('folder', 'snippet', or 'device')                          | "folder"            |
+| `--source`            | The source folder/snippet/device from which to retrieve objects              | None (prompted)     |
+| `--destination`       | The destination folder/snippet/device where objects will be created          | None (prompted)     |
+| `--names, -n`         | Comma-separated list of object names to filter                               | None                |
+| `--exclude-folders`   | Comma-separated list of folders to exclude from retrieval                    | None                |
+| `--exclude-snippets`  | Comma-separated list of snippets to exclude from retrieval                   | None                |
+| `--exclude-devices`   | Comma-separated list of devices to exclude from retrieval                    | None                |
+| `--commit-and-push`   | If set, commit changes on the destination tenant after creating objects      | False               |
+| `--auto-approve, -A`  | If set (or in settings), skip confirmation prompt before cloning             | Value from settings |
+| `--create-report, -R` | If set (or in settings), append results to `result.csv`                      | Value from settings |
+| `--dry-run, -D`       | If set (or in settings), simulate without applying changes                   | Value from settings |
+| `--quiet-mode, -Q`    | If set (or in settings), hide console output except logs                     | Value from settings |
+| `--logging-level, -L` | Override logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)               | Value from settings |
+| `--settings-file, -s` | Path to the YAML settings file                                               | `settings.yaml`     |
 
 ## Initial Setup (Creating the Settings File)
 
@@ -79,7 +86,7 @@ folder.
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone addresses --source-folder "Texas"
+scm-clone addresses --context folder --source "Texas" --destination "Texas"
 ```
 </div>
 
@@ -91,7 +98,7 @@ is `false`, you'll see a table of retrieved addresses and, after creation, a tab
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone addresses --source-folder "Texas" -D
+scm-clone addresses --context folder --source "Texas" --destination "Texas" -D
 ```
 </div>
 
@@ -102,7 +109,7 @@ This simulates the process without applying changes.
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone addresses --source-folder "Texas" --exclude-folders "All,Default" --exclude-snippets "predefined" -A --commit-and-push
+scm-clone addresses --context folder --source "Texas" --destination "Texas" --exclude-folders "All,Default" --exclude-snippets "predefined" -A --commit-and-push
 ```
 </div>
 
@@ -116,7 +123,7 @@ For tags, assume we have a similar workflow. Just specify the folder and any fil
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone tags --source-folder "Texas" --exclude-devices "DeviceA" -A
+scm-clone tags --context folder --source "Texas" --destination "Texas" --exclude-devices "DeviceA" -A
 ```
 </div>
 
@@ -128,7 +135,7 @@ If you want a dry-run scenario for tags:
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone tags --source-folder "Texas" -D
+scm-clone tags --context folder --source "Texas" --destination "Texas" -D
 ```
 </div>
 
@@ -142,7 +149,7 @@ console clutter:
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone services --source-folder "Texas" --exclude-snippets "legacy-snippet" -Q
+scm-clone services --context folder --source "Texas" --destination "Texas" --exclude-snippets "legacy-snippet" -Q
 ```
 </div>
 
@@ -154,7 +161,7 @@ To commit changes after cloning services:
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone services --source-folder "Texas" --commit-and-push
+scm-clone services --context folder --source "Texas" --destination "Texas" --commit-and-push
 ```
 </div>
 
@@ -166,7 +173,7 @@ folder `cdot65` in the `pre` rulebase, and you'd like a prompt before proceeding
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone security-rules --source-folder "cdot65" --rulebase "pre"
+scm-clone security-rules --context folder --source "cdot65" --destination "cdot65" --rulebase "pre"
 ```
 </div>
 
@@ -175,7 +182,7 @@ If you want to exclude certain devices or snippets while cloning security rules:
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone security-rules --source-folder "cdot65" --rulebase "pre" --exclude-devices "DeviceX" --exclude-snippets "snipA,snipB"
+scm-clone security-rules --context folder --source "cdot65" --destination "cdot65" --rulebase "pre" --exclude-devices "DeviceX" --exclude-snippets "snipA,snipB"
 ```
 </div>
 
@@ -184,7 +191,7 @@ To automatically approve and commit the changes:
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone security-rules --source-folder "cdot65" --rulebase "pre" -A --commit-and-push
+scm-clone security-rules --context folder --source "cdot65" --destination "cdot65" --rulebase "pre" -A --commit-and-push
 ```
 </div>
 
@@ -197,18 +204,18 @@ Remote Networks are a key component of SASE deployments. After setting up your `
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone remote-networks --source "Remote Networks"
+scm-clone remote-networks --context folder --source "Remote Networks" --destination "Remote Networks"
 ```
 </div>
 
 This will list all remote networks in the source folder, prompting for confirmation before cloning.
 
-**Specifying both source and destination folders:**
+**Specifying different source and destination folders:**
 
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone remote-networks --source "Remote Networks" --destination "Branch Offices"
+scm-clone remote-networks --context folder --source "Remote Networks" --destination "Branch Offices"
 ```
 </div>
 
@@ -219,7 +226,7 @@ This retrieves remote networks from "Remote Networks" folder in the source tenan
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone remote-networks --source "Remote Networks" --exclude-folders "Deprecated,Testing" -A
+scm-clone remote-networks --context folder --source "Remote Networks" --destination "Remote Networks" --exclude-folders "Deprecated,Testing" -A
 ```
 </div>
 
@@ -230,7 +237,7 @@ This excludes any remote networks in the "Deprecated" and "Testing" folders, and
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone remote-networks --source "Remote Networks" -D --commit-and-push
+scm-clone remote-networks --context folder --source "Remote Networks" --destination "Remote Networks" -D --commit-and-push
 ```
 </div>
 
@@ -241,7 +248,7 @@ This will simulate the creation without applying changes. Note that `--commit-an
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone remote-networks --source "Remote Networks" --destination "Production" --exclude-folders "Testing" -A -R --commit-and-push
+scm-clone remote-networks --context folder --source "Remote Networks" --destination "Production" --exclude-folders "Testing" -A -R --commit-and-push
 ```
 </div>
 
@@ -261,7 +268,7 @@ Syslog server profiles define configurations for forwarding logs to external sys
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone syslog-server-profiles --source "Logging"
+scm-clone syslog-server-profiles --context folder --source "Logging" --destination "Logging"
 ```
 </div>
 
@@ -294,7 +301,7 @@ This retrieves profiles from a source snippet and creates them in a destination 
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone syslog-server-profiles --source "Logging" --exclude-folders "Test,Development" -A
+scm-clone syslog-server-profiles --context folder --source "Logging" --destination "Logging" --exclude-folders "Test,Development" -A
 ```
 </div>
 
@@ -305,7 +312,7 @@ This excludes profiles from the "Test" and "Development" folders, automatically 
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone syslog-server-profiles --source "Logging" -D
+scm-clone syslog-server-profiles --context folder --source "Logging" --destination "Logging" -D
 ```
 </div>
 
@@ -316,7 +323,7 @@ This simulates the cloning operation without making any changes, showing what wo
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone syslog-server-profiles --source "Logging" --destination "Production" -A -R -Q --commit-and-push
+scm-clone syslog-server-profiles --context folder --source "Logging" --destination "Production" -A -R -Q --commit-and-push
 ```
 </div>
 
@@ -348,18 +355,18 @@ IKE Crypto Profiles define the encryption, authentication, and key exchange para
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone ike-crypto-profiles --source-folder "VPN"
+scm-clone ike-crypto-profiles --context folder --source "VPN" --destination "VPN"
 ```
 </div>
 
 This lists all IKE crypto profiles in the source folder and prompts for confirmation before cloning.
 
-**Specifying both source and destination folders:**
+**Specifying different source and destination folders:**
 
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone ike-crypto-profiles --source-folder "VPN" --destination-folder "VPN-Profiles"
+scm-clone ike-crypto-profiles --context folder --source "VPN" --destination "VPN-Profiles"
 ```
 </div>
 
@@ -370,7 +377,7 @@ This retrieves IKE crypto profiles from the "VPN" folder and creates them in the
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone ike-crypto-profiles --source-snippet "vpn-snippet" --destination-snippet "vpn-profiles-snippet"
+scm-clone ike-crypto-profiles --context snippet --source "vpn-snippet" --destination "vpn-profiles-snippet"
 ```
 </div>
 
@@ -381,7 +388,7 @@ This retrieves profiles from a source snippet and creates them in a destination 
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone ike-crypto-profiles --source-folder "VPN" --names "profile1,profile2,profile3"
+scm-clone ike-crypto-profiles --context folder --source "VPN" --destination "VPN" --names "profile1,profile2,profile3"
 ```
 </div>
 
@@ -392,7 +399,7 @@ This clones only the specified profiles by name from the source folder.
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone ike-crypto-profiles --source-folder "VPN" --dry-run --auto-approve
+scm-clone ike-crypto-profiles --context folder --source "VPN" --destination "VPN" -D -A
 ```
 </div>
 
@@ -403,7 +410,7 @@ This simulates the cloning operation without making any changes and skips confir
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone ike-crypto-profiles --source-folder "VPN" --destination-folder "Production-VPN" --names "aes-256-sha256,aes-gcm-sha384" -y -R --commit-and-push
+scm-clone ike-crypto-profiles --context folder --source "VPN" --destination "Production-VPN" --names "aes-256-sha256,aes-gcm-sha384" -A -R --commit-and-push
 ```
 </div>
 
@@ -423,18 +430,18 @@ IKE Gateways define the connection points for IPsec VPN tunnels. The following e
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone ike-gateways --source-folder "VPN"
+scm-clone ike-gateways --context folder --source "VPN" --destination "VPN"
 ```
 </div>
 
 This lists all IKE gateways in the source folder and prompts for confirmation before cloning.
 
-**Specifying both source and destination folders:**
+**Specifying different source and destination folders:**
 
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone ike-gateways --source-folder "VPN" --destination-folder "VPN-Gateways"
+scm-clone ike-gateways --context folder --source "VPN" --destination "VPN-Gateways"
 ```
 </div>
 
@@ -445,7 +452,7 @@ This retrieves IKE gateways from the "VPN" folder and creates them in the "VPN-G
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone ike-gateways --source-snippet "vpn-snippet" --destination-snippet "vpn-gateways-snippet"
+scm-clone ike-gateways --context snippet --source "vpn-snippet" --destination "vpn-gateways-snippet"
 ```
 </div>
 
@@ -456,7 +463,7 @@ This retrieves gateways from a source snippet and creates them in a destination 
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone ike-gateways --source-folder "VPN" --names "gateway1,gateway2,gateway3"
+scm-clone ike-gateways --context folder --source "VPN" --destination "VPN" --names "gateway1,gateway2,gateway3"
 ```
 </div>
 
@@ -467,7 +474,7 @@ This clones only the specified gateways by name from the source folder.
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone ike-gateways --source-folder "VPN" --dry-run --auto-approve
+scm-clone ike-gateways --context folder --source "VPN" --destination "VPN" -D -A
 ```
 </div>
 
@@ -478,7 +485,7 @@ This simulates the cloning operation without making any changes and skips confir
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone ike-gateways --source-folder "VPN" --destination-folder "Production-VPN" --names "site-a-gateway,site-b-gateway" -y -R --commit-and-push
+scm-clone ike-gateways --context folder --source "VPN" --destination "Production-VPN" --names "site-a-gateway,site-b-gateway" -A -R --commit-and-push
 ```
 </div>
 
@@ -498,18 +505,18 @@ IPsec Crypto Profiles define the encryption, authentication, and other security 
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone ipsec-crypto-profiles --source-folder "VPN"
+scm-clone ipsec-crypto-profiles --context folder --source "VPN" --destination "VPN"
 ```
 </div>
 
 This lists all IPsec crypto profiles in the source folder and prompts for confirmation before cloning.
 
-**Specifying both source and destination folders:**
+**Specifying different source and destination folders:**
 
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone ipsec-crypto-profiles --source-folder "VPN" --destination-folder "VPN-Profiles"
+scm-clone ipsec-crypto-profiles --context folder --source "VPN" --destination "VPN-Profiles"
 ```
 </div>
 
@@ -520,7 +527,7 @@ This retrieves IPsec crypto profiles from the "VPN" folder and creates them in t
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone ipsec-crypto-profiles --source-snippet "vpn-snippet" --destination-snippet "vpn-profiles-snippet"
+scm-clone ipsec-crypto-profiles --context snippet --source "vpn-snippet" --destination "vpn-profiles-snippet"
 ```
 </div>
 
@@ -531,7 +538,7 @@ This retrieves profiles from a source snippet and creates them in a destination 
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone ipsec-crypto-profiles --source-folder "VPN" --names "esp-aes-256-sha1,ah-sha-256,esp-gcm-profile"
+scm-clone ipsec-crypto-profiles --context folder --source "VPN" --destination "VPN" --names "esp-aes-256-sha1,ah-sha-256,esp-gcm-profile"
 ```
 </div>
 
@@ -542,7 +549,7 @@ This clones only the specified profiles by name from the source folder.
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone ipsec-crypto-profiles --source-folder "VPN" --dry-run --auto-approve
+scm-clone ipsec-crypto-profiles --context folder --source "VPN" --destination "VPN" -D -A
 ```
 </div>
 
@@ -553,7 +560,7 @@ This simulates the cloning operation without making any changes and skips confir
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone ipsec-crypto-profiles --source-folder "VPN" --destination-folder "Production-VPN" --names "esp-aes-256-gcm,esp-suite-b" -y -R --commit-and-push
+scm-clone ipsec-crypto-profiles --context folder --source "VPN" --destination "Production-VPN" --names "esp-aes-256-gcm,esp-suite-b" -A -R --commit-and-push
 ```
 </div>
 
@@ -570,40 +577,41 @@ The following commands are also available but not covered in detail in this exam
 
 ### Object Commands
 
-- **address-groups**: Clone address group objects between tenants
-- **application-filters**: Clone application filter objects 
-- **application-groups**: Clone application group objects
-- **dynamic-user-groups**: Clone dynamic user group objects
-- **hip-profiles**: Clone HIP profile objects
-- **http-server-profiles**: Clone HTTP server profile objects
-- **log-forwarding-profiles**: Clone log forwarding profile objects
-- **quarantined-devices**: Clone quarantined device objects
-- **regions**: Clone region objects
-- **schedules**: Clone schedule objects
-- **service-groups**: Clone service group objects
+- **address-groups**: Clone address group objects (use `--context folder/snippet/device`)
+- **application-filters**: Clone application filter objects (use `--context folder/snippet/device`)
+- **application-groups**: Clone application group objects (use `--context folder/snippet/device`)
+- **dynamic-user-groups**: Clone dynamic user group objects (use `--context folder/snippet/device`)
+- **hip-profiles**: Clone HIP profile objects (use `--context folder/snippet/device`)
+- **http-server-profiles**: Clone HTTP server profile objects (use `--context folder/snippet/device`)
+- **log-forwarding-profiles**: Clone log forwarding profile objects (use `--context folder/snippet/device`)
+- **quarantined-devices**: Clone quarantined device objects (use `--context folder/snippet/device`)
+- **regions**: Clone region objects (use `--context folder/snippet/device`)
+- **schedules**: Clone schedule objects (use `--context folder/snippet/device`)
+- **service-groups**: Clone service group objects (use `--context folder/snippet/device`)
 
 ### Security Service Commands
 
-- **anti-spyware-profiles**: Clone anti-spyware profile objects
-- **decryption-profiles**: Clone decryption profile objects
-- **dns-security-profiles**: Clone DNS security profile objects
-- **url-categories**: Clone URL category objects
-- **vulnerability-profiles**: Clone vulnerability protection profile objects
-- **wildfire-profiles**: Clone Wildfire antivirus profile objects
+- **anti-spyware-profiles**: Clone anti-spyware profile objects (use `--context folder/snippet/device`)
+- **decryption-profiles**: Clone decryption profile objects (use `--context folder/snippet/device`)
+- **dns-security-profiles**: Clone DNS security profile objects (use `--context folder/snippet/device`)
+- **security-rules**: Clone security rule objects (use `--context folder/snippet/device`)
+- **url-categories**: Clone URL category objects (use `--context folder/snippet/device`)
+- **vulnerability-profiles**: Clone vulnerability protection profile objects (use `--context folder/snippet/device`)
+- **wildfire-profiles**: Clone Wildfire antivirus profile objects (use `--context folder/snippet/device`)
 
 ### Network Service Commands
 
-- **ike-crypto-profiles**: Clone IKE crypto profile objects
-- **ike-gateways**: Clone IKE gateway objects
-- **ipsec-crypto-profiles**: Clone IPsec crypto profile objects
-- **nat-rules**: Clone NAT rule objects
+- **ike-crypto-profiles**: Clone IKE crypto profile objects (use `--context folder/snippet/device`)
+- **ike-gateways**: Clone IKE gateway objects (use `--context folder/snippet/device`)
+- **ipsec-crypto-profiles**: Clone IPsec crypto profile objects (use `--context folder/snippet/device`)
+- **nat-rules**: Clone NAT rule objects (use `--context folder/snippet/device`)
 
-To use any of these commands, follow the same patterns shown in the examples above:
+To use any of these commands, follow the same context pattern for all commands:
 
 <div class="termy">
 <!-- termynal -->
 ```bash
-scm-clone [command-name] --source "Source Folder" [other-options]
+scm-clone [command-name] --context folder --source "Source Name" --destination "Destination Name" [other-options]
 ```
 </div>
 
@@ -671,13 +679,13 @@ Start by cloning the foundational objects that other configurations may depend o
 <!-- termynal -->
 ```bash
 # Clone address objects
-scm-clone addresses --source "Network Objects" --destination "Network Objects" --commit-and-push
+scm-clone addresses --context folder --source "Network Objects" --destination "Network Objects" --commit-and-push
 
 # Clone services
-scm-clone services --source "Service Objects" --destination "Service Objects" --commit-and-push
+scm-clone services --context folder --source "Service Objects" --destination "Service Objects" --commit-and-push
 
 # Clone tags
-scm-clone tags --source "Tags" --destination "Tags" --commit-and-push
+scm-clone tags --context folder --source "Tags" --destination "Tags" --commit-and-push
 ```
 </div>
 
@@ -689,13 +697,13 @@ Next, clone group objects that reference the static objects:
 <!-- termynal -->
 ```bash
 # Clone address groups
-scm-clone address-groups --source "Network Objects" --destination "Network Objects" --commit-and-push
+scm-clone address-groups --context folder --source "Network Objects" --destination "Network Objects" --commit-and-push
 
 # Clone service groups
-scm-clone service-groups --source "Service Objects" --destination "Service Objects" --commit-and-push
+scm-clone service-groups --context folder --source "Service Objects" --destination "Service Objects" --commit-and-push
 
 # Clone application groups
-scm-clone application-groups --source "Applications" --destination "Applications" --commit-and-push
+scm-clone application-groups --context folder --source "Applications" --destination "Applications" --commit-and-push
 ```
 </div>
 
@@ -707,14 +715,14 @@ Before cloning security rules, set up the security profiles:
 <!-- termynal -->
 ```bash
 # Clone anti-spyware profiles
-scm-clone anti-spyware-profiles --source "Security Profiles" --destination "Security Profiles" --commit-and-push
+scm-clone anti-spyware-profiles --context folder --source "Security Profiles" --destination "Security Profiles" --commit-and-push
 
 # Clone URL categories
-scm-clone url-categories --source "Security Profiles" --destination "Security Profiles" --commit-and-push
+scm-clone url-categories --context folder --source "Security Profiles" --destination "Security Profiles" --commit-and-push
 
 # Clone other security profiles
-scm-clone vulnerability-profiles --source "Security Profiles" --destination "Security Profiles" --commit-and-push
-scm-clone wildfire-profiles --source "Security Profiles" --destination "Security Profiles" --commit-and-push
+scm-clone vulnerability-profiles --context folder --source "Security Profiles" --destination "Security Profiles" --commit-and-push
+scm-clone wildfire-profiles --context folder --source "Security Profiles" --destination "Security Profiles" --commit-and-push
 ```
 </div>
 
@@ -726,7 +734,7 @@ Now you can clone the security rules that reference all the objects and profiles
 <!-- termynal -->
 ```bash
 # Clone security rules
-scm-clone security-rules --source "Security" --destination "Security" --commit-and-push
+scm-clone security-rules --context folder --source "Security" --destination "Security" --commit-and-push
 ```
 </div>
 
@@ -738,11 +746,29 @@ Clone NAT rules after security rules:
 <!-- termynal -->
 ```bash
 # Clone NAT rules
-scm-clone nat-rules --source "NAT" --destination "NAT" --commit-and-push
+scm-clone nat-rules --context folder --source "NAT" --destination "NAT" --commit-and-push
 ```
 </div>
 
-### Step 7: Clone SASE Configurations (if applicable)
+### Step 7: Clone VPN Configurations
+
+For VPN configurations:
+
+<div class="termy">
+<!-- termynal -->
+```bash
+# Clone IKE crypto profiles
+scm-clone ike-crypto-profiles --context folder --source "VPN" --destination "VPN" --commit-and-push
+
+# Clone IKE gateways
+scm-clone ike-gateways --context folder --source "VPN" --destination "VPN" --commit-and-push
+
+# Clone IPsec crypto profiles
+scm-clone ipsec-crypto-profiles --context folder --source "VPN" --destination "VPN" --commit-and-push
+```
+</div>
+
+### Step 8: Clone SASE Configurations (if applicable)
 
 If you're also migrating SASE configurations:
 
@@ -750,7 +776,7 @@ If you're also migrating SASE configurations:
 <!-- termynal -->
 ```bash
 # Clone remote networks
-scm-clone remote-networks --source "Remote Networks" --destination "Remote Networks" --commit-and-push
+scm-clone remote-networks --context folder --source "Remote Networks" --destination "Remote Networks" --commit-and-push
 ```
 </div>
 
