@@ -75,17 +75,97 @@ To generate it interactively, mount the current working directory into `/app` in
 # PowerShell (directory on Windows drive, e.g. C:)
 docker run -it --rm -v "${PWD}:/app" ghcr.io/cdot65/scm-config-clone settings
 
-# PowerShell when working in a WSL/UNC path – quote the UNC directly (no $PWD)
-docker run --rm -v "//wsl.localhost/Ubuntu/home/youruser/scm-config-clone:/app" ghcr.io/cdot65/scm-config-clone settings
-
-# If you encounter a provider-qualified path error, use the `.Path` property:
-docker run --rm -v "${PWD.Path}:/app" ghcr.io/cdot65/scm-config-clone settings
-
 # Windows CMD
 docker run --rm -v "%cd%":/app ghcr.io/cdot65/scm-config-clone settings
 ```
 
 A `settings.yaml` will be generated in your current directory. Subsequent commands should include the same mount so the CLI can read the file.
+
+### Working example (clone addresses)
+
+```powershell
+PS C:\Users\cdot\Documents> docker run -it --rm -v "${PWD}:/app" ghcr.io/cdot65/scm-config-clone addresses
+🚀 Starting address objects cloning...
+Name of source folder where objects are located: Austin
+Name of destination folder where objects will go: Texas
+INFO:scm_config_clone.commands.objects.address:Authenticated with source SCM tenant: 1527824794
+INFO:scm_config_clone.commands.objects.address:Authenticated with destination SCM tenant: 1540792209
+INFO:scm_config_clone.commands.objects.address:Retrieved 47 address objects from source folder 'Austin'.
+INFO:scm_config_clone.commands.objects.address:Retrieved 15248 objects from destination folder 'Texas'
+╒════════════════════╤══════════════════════╕
+│ Name               │ Destination Status   │
+╞════════════════════╪══════════════════════╡
+│ snippet-object-1-1 │ x                    │
+│ snippet-object-1   │ x                    │
+│ snippet-object-2   │ x                    │
+│ snippet-object-3   │ x                    │
+│ dhcp_pool          │ x                    │
+│ bulk_address_1     │ x                    │
+│ bulk_address_2     │ x                    │
+│ bulk_address_3     │ x                    │
+│ bulk_address_4     │ x                    │
+│ bulk_address_5     │ x                    │
+│ bulk_address_6     │ x                    │
+│ bulk_address_7     │ x                    │
+│ bulk_address_8     │ x                    │
+│ bulk_address_9     │ x                    │
+│ bulk_address_10    │ x                    │
+│ bulk_address_11    │ x                    │
+│ bulk_address_12    │ x                    │
+│ bulk_address_13    │ x                    │
+│ bulk_address_14    │ x                    │
+│ bulk_address_15    │ x                    │
+│ bulk_address_16    │ x                    │
+│ bulk_address_17    │ x                    │
+│ bulk_address_18    │ x                    │
+│ bulk_address_19    │ x                    │
+│ bulk_address_20    │ x                    │
+│ bulk_address_21    │ x                    │
+│ bulk_address_22    │ x                    │
+│ bulk_address_23    │ x                    │
+│ bulk_address_24    │ x                    │
+│ bulk_address_25    │ x                    │
+│ bulk_address_26    │ x                    │
+│ bulk_address_27    │ x                    │
+│ bulk_address_28    │ x                    │
+│ bulk_address_29    │ x                    │
+│ bulk_address_30    │ x                    │
+│ bulk_address_31    │ x                    │
+│ bulk_address_32    │ x                    │
+│ bulk_address_33    │ x                    │
+│ bulk_address_34    │ x                    │
+│ bulk_address_35    │ x                    │
+│ bulk_address_36    │ x                    │
+│ bulk_address_37    │ x                    │
+│ bulk_address_38    │ x                    │
+│ bulk_address_39    │ x                    │
+│ bulk_address_40    │ x                    │
+│ bulk_address_41    │ x                    │
+│ bulk_address_42    │ x                    │
+╘════════════════════╧══════════════════════╛
+Do you want to proceed with creating these objects in the destination tenant? [y/N]: y
+INFO:scm_config_clone.commands.objects.address:No new address objects were created, skipping commit.
+🎉 Address objects cloning completed successfully! 🎉
+```
+
+### Interactive settings file creation (full flow)
+
+```powershell
+PS C:\Users\you\Documents> docker run -it --rm -v "${PWD}:/app" ghcr.io/cdot65/scm-config-clone settings
+# ...interactive prompts...
+🎉 Setup complete! 🎉
+```
+
+### Docker Usage
+
+From this point forward, you will need to mount your local `settings.yaml` file into the container at `/app/settings.yaml`.
+
+```powershell
+PS C:\Users\you\Documents> docker run -it --rm -v "${PWD}:/app" ghcr.io/cdot65/scm-config-clone addresses --source-folder "Texas"
+```
+
+
+
 
 ## Basic Usage
 
