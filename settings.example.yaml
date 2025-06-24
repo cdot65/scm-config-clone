@@ -1,0 +1,17 @@
+# Example configuration for scm-config-clone
+# Copy or rename this file to `settings.yaml` and edit the values.
+
+auto_approve: false
+create_report: false
+dry_run: false
+logging: INFO
+oauth:
+  destination:
+    client_id: example@1234567890.iam.panserviceaccount.com
+    client_secret: b8bf6427-b56b-4a71-a235-e50554fe874d
+    tsg: '1234567890'
+  source:
+    client_id: example@0987654321.iam.panserviceaccount.com
+    client_secret: ee2afefa-4439-4d06-8135-504eca6fa2a8
+    tsg: '0987654321'
+quiet: false

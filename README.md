@@ -15,6 +15,7 @@ streamlines migration tasks and reduces manual errors.
 
 - [Features](#features)
 - [Installation](#installation)
+- [Docker](#docker)
 - [Basic Usage](#basic-usage)
 - [Creating the Settings File](#creating-the-settings-file)
 - [Cloning Objects](#cloning-objects)
@@ -42,6 +43,49 @@ Install directly from PyPI:
 ```bash
 pip install scm-config-clone
 ```
+
+## Docker
+
+### Build Locally
+
+```powershell
+# From repository root
+docker build -t scm-config-clone -f ./docker/Dockerfile .
+```
+
+### Pull from GitHub Container Registry
+
+```powershell
+docker pull ghcr.io/cdot65/scm-config-clone:latest
+```
+
+### Run the CLI
+
+```powershell
+docker run --rm ghcr.io/cdot65/scm-config-clone --help
+```
+
+### Create a settings.yaml (Windows example)
+
+`scm-clone` stores credentials in a `settings.yaml`. If you prefer, copy `settings.example.yaml` to `settings.yaml` and edit manually.
+
+To generate it interactively, mount the current working directory into `/app` inside the container:
+
+```powershell
+# PowerShell (directory on Windows drive, e.g. C:)
+docker run -it --rm -v "${PWD}:/app" ghcr.io/cdot65/scm-config-clone settings
+
+# PowerShell when working in a WSL/UNC path – quote the UNC directly (no $PWD)
+docker run --rm -v "//wsl.localhost/Ubuntu/home/youruser/scm-config-clone:/app" ghcr.io/cdot65/scm-config-clone settings
+
+# If you encounter a provider-qualified path error, use the `.Path` property:
+docker run --rm -v "${PWD.Path}:/app" ghcr.io/cdot65/scm-config-clone settings
+
+# Windows CMD
+docker run --rm -v "%cd%":/app ghcr.io/cdot65/scm-config-clone settings
+```
+
+A `settings.yaml` will be generated in your current directory. Subsequent commands should include the same mount so the CLI can read the file.
 
 ## Basic Usage
 

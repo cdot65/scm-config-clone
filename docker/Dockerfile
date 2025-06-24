@@ -12,21 +12,21 @@ RUN apk add --no-cache gcc musl-dev libffi-dev make
 WORKDIR /app
 
 # Install any needed packages specified
-RUN pip install --no-cache-dir scm-config-clone==0.1.0
+RUN pip install --no-cache-dir scm-config-clone
 
 # Set the locale to avoid issues with emoji rendering
 ENV LANG=C.UTF-8
 
-# Create a non-root user
-RUN adduser -D panadmin
-USER panadmin
+# # Create a non-root user
+# RUN adduser -D panadmin
+# USER panadmin
 
 # Define the entry point for the application
-ENTRYPOINT ["scm-config-clone"]
+ENTRYPOINT ["scm-clone"]
 
 # By default, show the help message if no arguments are provided
 CMD ["--help"]
 
 # Add a healthcheck
 HEALTHCHECK --interval=30s --timeout=5s \
-    CMD pgrep -f "scm-config-clone" > /dev/null || exit 1
+    CMD pgrep -f "scm-clone" > /dev/null || exit 1
