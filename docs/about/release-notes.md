@@ -5,6 +5,17 @@ enhancements, and fixes in each version of the tool.
 
 ---
 
+## Version 0.3.2
+
+**Release Date:** July 18, 2025
+
+### Changes
+
+- **Dependency Update**:
+  - Updated `pan-scm-sdk` from version 0.3.43 to 0.3.44
+
+---
+
 ## Version 0.3.0
 
 **Release Date:** March 7, 2025
